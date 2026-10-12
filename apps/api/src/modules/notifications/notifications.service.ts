@@ -21,6 +21,12 @@ export interface UpdatePreferenceDto {
   push?: boolean;
 }
 
+export interface RegisterPushTokenDto {
+  token: string;
+  platform: 'ios' | 'android' | 'web';
+  deviceId?: string;
+}
+
 @Injectable()
 export class NotificationsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -112,5 +118,35 @@ export class NotificationsService {
         channel: dto.channel || 'IN_APP',
       },
     });
+  }
+
+  /**
+   * Register or update mobile push token
+   */
+  async registerPushToken(userId: string, dto: RegisterPushTokenDto) {
+    return this.prisma.pushToken.upsert({
+      where: { userId_token: { userId, token: dto.token } },
+      create: {
+        userId,
+        token: dto.token,
+        platform: dto.platform.toLowerCase(),
+        deviceId: dto.deviceId || null,
+      },
+      update: {
+        platform: dto.platform.toLowerCase(),
+        deviceId: dto.deviceId || null,
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  /**
+   * Remove push token (e.g. on logout)
+   */
+  async unregisterPushToken(userId: string, token: string) {
+    await this.prisma.pushToken.deleteMany({
+      where: { userId, token },
+    });
+    return { success: true };
   }
 }

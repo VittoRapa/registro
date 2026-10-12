@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Delete,
   Param,
   Body,
   Query,
@@ -12,6 +13,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import {
   NotificationsService,
   UpdatePreferenceDto,
+  RegisterPushTokenDto,
 } from './notifications.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -68,5 +70,25 @@ export class NotificationsController {
     @Body() dto: UpdatePreferenceDto,
   ) {
     return this.notificationsService.updatePreference(userId, dto);
+  }
+
+  @Post('push-tokens')
+  @Roles(Role.SUPER_ADMIN, Role.SCHOOL_ADMIN, Role.TEACHER, Role.STUDENT, Role.PARENT)
+  @ApiOperation({ summary: 'Registra o aggiorna un device token push (FCM / APNs)' })
+  async registerPushToken(
+    @CurrentUser('id') userId: string,
+    @Body() dto: RegisterPushTokenDto,
+  ) {
+    return this.notificationsService.registerPushToken(userId, dto);
+  }
+
+  @Delete('push-tokens/:token')
+  @Roles(Role.SUPER_ADMIN, Role.SCHOOL_ADMIN, Role.TEACHER, Role.STUDENT, Role.PARENT)
+  @ApiOperation({ summary: 'Rimuove un device token push alla disconnessione' })
+  async unregisterPushToken(
+    @CurrentUser('id') userId: string,
+    @Param('token') token: string,
+  ) {
+    return this.notificationsService.unregisterPushToken(userId, token);
   }
 }

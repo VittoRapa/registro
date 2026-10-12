@@ -262,6 +262,8 @@ model User {
   reviewedJustifications  Justification[] @relation("JustificationReviewer")
   teacherAvailability    TeacherAvailabilitySlot[]
   meetingBookings        MeetingBooking[] @relation("BookingParent")
+  pushTokens             PushToken[]
+  flashcardDecks         FlashcardDeck[]
 
   @@unique([schoolId, username])
   @@unique([schoolId, email])
@@ -1171,6 +1173,8 @@ model PushToken {
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @db.Timestamptz(6)
 
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, token])
   @@index([userId])
   @@map("push_tokens")
@@ -1296,4 +1300,46 @@ model ExportJob {
 
   @@index([schoolId])
   @@map("export_jobs")
+}
+
+model FlashcardDeck {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @db.Uuid
+  schoolId     String   @db.Uuid
+  subjectId    String?  @db.Uuid
+  sharedNoteId String?  @db.Uuid
+  title        String   @db.VarChar(200)
+  description  String?  @db.Text
+  isPublic     Boolean  @default(false)
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(6)
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cards        Flashcard[]
+
+  @@index([userId])
+  @@index([schoolId])
+  @@index([sharedNoteId])
+  @@map("flashcard_decks")
+}
+
+model Flashcard {
+  id             String    @id @default(uuid()) @db.Uuid
+  deckId         String    @db.Uuid
+  front          String    @db.Text
+  back           String    @db.Text
+  hint           String?   @db.Text
+  repetition     Int       @default(0)
+  interval       Int       @default(0) // giorni
+  easeFactor     Float     @default(2.5) // SM-2 standard factor
+  dueDate        DateTime  @default(now()) @db.Timestamptz(6)
+  lastReviewedAt DateTime? @db.Timestamptz(6)
+  createdAt      DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @db.Timestamptz(6)
+
+  deck           FlashcardDeck @relation(fields: [deckId], references: [id], onDelete: Cascade)
+
+  @@index([deckId])
+  @@index([dueDate])
+  @@map("flashcards")
 }

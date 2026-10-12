@@ -5,6 +5,46 @@ Tutte le modifiche rilevanti a questo progetto saranno documentate in questo fil
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/)
 e questo progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.7.0] - 2026-10-12
+
+### Aggiunto
+- **Studio Assistito con Ripetizione Spaziata SuperMemo SM-2 (Spec 18.1)**:
+  - Modelli database Prisma `FlashcardDeck` e `Flashcard` con supporto intervalli SM-2 (`repetition`, `interval`, `easeFactor`, `dueDate`, `lastReviewedAt`).
+  - Backend NestJS `FlashcardsModule`, `FlashcardsService` e `FlashcardsController`:
+    - `GET /api/v1/flashcards/decks` e `POST /api/v1/flashcards/decks`: gestione mazzi personali per materia/classe.
+    - `POST /api/v1/flashcards/decks/:id/cards`: creazione schede fronte, retro e suggerimento.
+    - `GET /api/v1/flashcards/decks/:id/due`: recupero schede in scadenza per la sessione di studio giornaliera.
+    - `POST /api/v1/flashcards/cards/:id/review`: sottomissione valutazione qualità ripasso (grado 0-5) con ricalcolo deterministico di intervallo, ripetizioni e floor di facilità (`easeFactor >= 1.3`).
+  - Pagina web interattiva `/studio` (`apps/web`):
+    - Visualizzazione mazzi con contatori schede totali e schede in scadenza oggi.
+    - Card flip 3D interattiva per girare fronte/retro, consultare suggerimenti opzionali ed eseguire grading rapido con pulsanti colorati (0 = Buio Totale a 5 = Perfetto).
+    - Ricezione parametri query (`?newDeck=true&title=...`) con supporto Suspense per precompilazione istantanea da altre sezioni.
+  - Integrazione didattica catalogo appunti:
+    - Pulsante "Crea Mazzo" nella testata della scheda appunto `/appunti/[id]` per generare mazzi di flashcard a partire dai contenuti studiati.
+    - Aggiunto comando rapido `/studio` nel menu di ricerca globale `Ctrl+K` (`CommandMenu`) e navigazione studente.
+- **Predisposizioni Push Notification & App Config Mobile (Fase 6)**:
+  - Gestione token push (`/notifications/push-tokens`): registrazione e revoca device token (Expo push, FCM, APNS) collegati all'utente autenticato.
+  - Endpoint `GET /api/v1/app-config`: fornitura parametri di configurazione client mobile, versione minima supportata (`minVersion`), ultima versione (`latestVersion`), kill switch di emergenza e feature flag attivi.
+- **Disaster Recovery, Backup & Restore Database (Spec 19 - Sicurezza & GDPR)**:
+  - Script automatizzato di backup logico `scripts/db-backup.js` e wrapper PowerShell `scripts/backup-db.ps1`:
+    - Dump compresso con gzip (livello 9) di tutte le 54 tabelle, dati, sequenze e schemi.
+    - Calcolo checksum crittografico SHA-256 e salvataggio file manifest con metadati e statistiche per tabella.
+  - Script di ripristino e disaster recovery `scripts/db-restore.js` e wrapper PowerShell `scripts/restore-db.ps1`:
+    - Verifica preventiva di integrità tramite hash SHA-256.
+    - Disabilitazione temporanea dei vincoli di chiave esterna (`SET session_replication_role = 'replica'`).
+    - Truncate atomico in cascata, reinserimento dati, riallineamento delle sequenze e riattivazione delle regole di integrità referenziale.
+  - Documentazione operativa completa delle procedure di backup e ripristino in `docs/RUNBOOK.md`.
+- **Test di Carico ad Alta Concorrenza (k6 - Spec 16 Fase 4 & Spec 19)**:
+  - Script di test `scripts/load-test.js` configurato con scenari multi-utente realistici:
+    - Warm-up progressivo da 1 a 50 VU.
+    - Picco sostenuto a **200 RPS** (100-150 VU) con flussi completi: login JWT Argon2id, consultazione libretto voti, paginazione bacheca appunti condivisi e mazzi studio SM-2.
+    - Soglie di qualità codificate: `http_req_duration p95 < 500ms`, `p99 < 1200ms`, tasso di errore `failed_requests < 1%`, latenza login `p95 < 600ms`.
+- **Quality Gate Monorepo**:
+  - Test suite monorepo portata a **81 test unitari** (13 suite `@registro/api`, 2 suite `@registro/shared`), tutti superati al 100%.
+  - Typecheck verificato su 5 pacchetti con zero errori (`tsc --noEmit`).
+  - ESLint verificato su tutto il monorepo con zero errori.
+  - Build di produzione Next.js 15 completata su 36 route e NestJS backend compilato in `dist/`.
+
 ## [0.6.0] - 2026-10-12
 
 ### Aggiunto

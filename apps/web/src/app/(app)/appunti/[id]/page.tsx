@@ -19,6 +19,7 @@ import {
   Edit2,
   ExternalLink,
   Lock,
+  Sparkles,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
@@ -360,9 +361,22 @@ export default function SharedNoteDetailPage() {
               </div>
             </div>
 
-            {/* Quick Actions (Bookmark, Report, Teacher Verification) */}
+            {/* Quick Actions (Bookmark, Report, Teacher Verification, Flashcards) */}
             <div className="flex flex-wrap sm:flex-col items-center sm:items-end gap-2 shrink-0">
               <div className="flex items-center gap-2">
+                <Link
+                  href={`/studio?newDeck=true&title=${encodeURIComponent('Mazzo: ' + note.title)}&desc=${encodeURIComponent('Generato da studio appunto: ' + note.title)}`}
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-blue-600 border-blue-200 bg-blue-50/50 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-400"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    Crea Mazzo
+                  </Button>
+                </Link>
+
                 <Button
                   variant="outline"
                   size="sm"

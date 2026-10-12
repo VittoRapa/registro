@@ -50,3 +50,5 @@ data/
 minio-data/
 postgres-data/
 redis-data/
+backups/*
+!backups/.gitkeep

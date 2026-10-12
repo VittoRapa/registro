@@ -32,6 +32,7 @@ import { MeetingsModule } from './modules/meetings/meetings.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { EventsModule } from './modules/events/events.module';
 import { CalendarModule } from './modules/calendar/calendar.module';
+import { FlashcardsModule } from './modules/flashcards/flashcards.module';
 import { TenantMiddleware } from './common/tenant/tenant.middleware';
 
 @Module({
@@ -84,6 +85,7 @@ import { TenantMiddleware } from './common/tenant/tenant.middleware';
     NotificationsModule,
     EventsModule,
     CalendarModule,
+    FlashcardsModule,
     HealthModule,
   ],
 })

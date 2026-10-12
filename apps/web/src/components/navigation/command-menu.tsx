@@ -15,6 +15,7 @@ import {
   Users,
   ShieldCheck,
   Calculator,
+  Sparkles,
   X,
 } from 'lucide-react';
 
@@ -30,6 +31,7 @@ const COMMANDS: CommandItem[] = [
   { id: 'dash', title: 'Bacheca Principale', category: 'Navigazione', icon: LayoutDashboard, href: '/dashboard' },
   { id: 'voti', title: 'Registro Voti e Medie', category: 'Didattica', icon: GraduationCap, href: '/voti' },
   { id: 'simulatore', title: 'Simulatore Voti Obiettivo', category: 'Didattica', icon: Calculator, href: '/voti?tab=simulatore' },
+  { id: 'studio', title: 'Studio Assistito SM-2 (Flashcard)', category: 'Didattica', icon: Sparkles, href: '/studio' },
   { id: 'assenze', title: 'Libretto Assenze e Giustifiche', category: 'Didattica', icon: Clock, href: '/assenze' },
   { id: 'compiti', title: 'Compiti per Casa e Checklist', category: 'Didattica', icon: BookOpen, href: '/compiti' },
   { id: 'orario', title: 'Orario Scolastico Settimanale', category: 'Didattica', icon: Calendar, href: '/orario' },
