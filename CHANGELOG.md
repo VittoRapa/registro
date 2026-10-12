@@ -5,6 +5,51 @@ Tutte le modifiche rilevanti a questo progetto saranno documentate in questo fil
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/)
 e questo progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.3.0] - 2026-10-12
+
+### Aggiunto
+- **Registro Lezioni & Firma Docente (`/lessons`)**:
+  - Firma digitale dell'ora di lezione con associazione cattedra, data e ora del giorno.
+  - Registrazione argomenti trattati, note didattiche e compiti assegnati contestuali.
+  - Protezione anti-conflitto e verifica cattedra docente.
+- **Appello Rapido & Libretto Presenze (`/attendance`)**:
+  - Appello di classe rapido (<30 secondi) con pulsante "Tutti Presenti" e stati P (Presente), A (Assente), R (Ritardo con minuti), U (Uscita anticipata).
+  - Storico presenze studente con calcolo automatico ore totali, assenze, ritardi e tasso percentuale di frequenza.
+  - Modulo di richiesta giustificazione digitale per genitori e studenti maggiorenni (salute, famiglia, altro) e flusso di approvazione/rigetto da parte del docente o segreteria.
+- **Orario Scolastico Didattico (`/timetable`)**:
+  - Modulo orario settimanale per classi e docenti (scansione 1ª-6ª ora).
+  - Algoritmo di rilevamento conflitti su sovrapposizione aula, docente o classe.
+- **Valutazioni & Medie Ponderate (`/grades`)**:
+  - Inserimento singolo voto e massivo per verifiche di classe (`/grades/bulk`).
+  - Supporto per tipologie di prova: Orale, Scritto, Pratico, Progetto, Test Rapido.
+  - Calcolo automatico in tempo reale di medie aritmetiche e medie ponderate per disciplina e globali.
+  - Applicazione vincolo normativo finestra di modifica: modifiche consentite entro 7 giorni dall'inserimento con motivazione obbligatoria tracciata in audit log; blocco automatico oltre i 7 giorni superabile solo da SchoolAdmin.
+  - Soft-delete dei voti con motivazione formale archiviata nel registro di audit.
+- **Compiti per Casa & Assegnazioni (`/homework`)**:
+  - Assegnazione compiti con data assegnazione, scadenza temporale e minutaggio stimato.
+  - Gestione stato svolgimento individuale (`TODO` / `DONE`) per gli studenti iscritti.
+- **Agenda di Classe & Calendario Verifiche (`/agenda`)**:
+  - Pianificazione verifiche scritte, interrogazioni programmate, uscite didattiche e riunioni.
+- **Note Disciplinari & Comunicazioni Famiglie (`/disciplinary-notes`)**:
+  - Emissione note disciplinari individuali o per l'intera classe.
+  - Tracciamento della presa visione formale e firma digitale dei genitori con timestamp.
+- **Circolari & Comunicazioni Istituzionali (`/announcements`)**:
+  - Pubblicazione avvisi per singola classe o intero istituto.
+  - Monitoraggio letture in tempo reale e meccanismo di presa visione obbligatoria.
+- **Interfaccia Web Docente (`@registro/web/docente`)**:
+  - Cruscotto docente (`/docente`) con orario giornaliero e scorciatoie per appello rapido.
+  - Registro interattivo di classe (`/docente/registro/[classId]`) con appello rapido, riepilogo contatori e firma lezione.
+  - Griglia matriciale voti (`/docente/voti`) con medie ponderate, inserimento bulk per verifiche e modale correzione tracciata.
+  - Gestione compiti (`/docente/compiti`), agenda verifiche (`/docente/agenda`), note disciplinari (`/docente/note`) e circolari (`/docente/comunicazioni`).
+- **Interfaccia Web Studente & Famiglia (`@registro/web`)**:
+  - Topbar unificata e reattiva (`StudentNav`) per navigazione tra bacheca, voti, presenze, compiti, orario e circolari.
+  - Bacheca studente (`/dashboard`) con lezioni di oggi, compiti in scadenza, riepilogo voti e circolari da firmare.
+  - Registro voti studente (`/voti`) con media aritmetica e ponderata per materia e complessiva.
+  - Libretto presenze (`/assenze`) con statistiche orarie e invio giustificazioni digitali.
+  - Checklist compiti (`/compiti`) con filtro e marcatura completamento TODO/DONE.
+  - Quadro orario settimanale (`/orario`) e lettore circolari con firma digitale (`/comunicazioni`).
+  - Endpoint `/users/me/profile` per recupero contestuale delle classi e profili collegati.
+
 ## [0.2.0] - 2026-10-12
 
 ### Aggiunto

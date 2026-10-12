@@ -294,6 +294,7 @@ model StudentProfile {
   disciplinaryNotes   DisciplinaryNote[] @relation("NoteStudent")
   homeworkStatuses    HomeworkStatus[]
   meetingBookings     MeetingBooking[]   @relation("BookingStudent")
+  justifications      Justification[]
 
   @@index([userId])
   @@index([matricola])
@@ -584,6 +585,7 @@ model Justification {
   createdAt         DateTime            @default(now()) @db.Timestamptz(6)
   updatedAt         DateTime            @updatedAt @db.Timestamptz(6)
 
+  studentProfile    StudentProfile      @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
   submittedBy       User                @relation("JustificationSubmitter", fields: [submittedByUserId], references: [id])
   reviewedBy        User?               @relation("JustificationReviewer", fields: [reviewedByUserId], references: [id])
   attendanceRecords AttendanceRecord[]

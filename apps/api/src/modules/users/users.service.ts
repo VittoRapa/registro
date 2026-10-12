@@ -537,4 +537,84 @@ export class UsersService {
 
     return { message: 'Dati personali utente anonimizzati nel rispetto del GDPR' };
   }
+
+  /**
+   * Get authenticated user profile with role-specific associations
+   */
+  async getMyProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        username: true,
+        email: true,
+        role: true,
+        schoolId: true,
+        studentProfile: {
+          select: {
+            id: true,
+            matricola: true,
+            enrollments: {
+              where: { status: 'ACTIVE' },
+              select: {
+                id: true,
+                classId: true,
+                class: {
+                  select: { id: true, name: true, grade: true, section: true },
+                },
+              },
+            },
+          },
+        },
+        teacherProfile: {
+          select: {
+            id: true,
+            employeeCode: true,
+            teachingAssignments: {
+              select: {
+                id: true,
+                classId: true,
+                subjectId: true,
+                class: { select: { id: true, name: true } },
+                subject: { select: { id: true, name: true } },
+              },
+            },
+          },
+        },
+        parentLinksAsParent: {
+          select: {
+            id: true,
+            relationship: true,
+            isPrimary: true,
+            canJustify: true,
+            studentProfile: {
+              select: {
+                id: true,
+                matricola: true,
+                user: {
+                  select: { id: true, firstName: true, lastName: true },
+                },
+                enrollments: {
+                  where: { status: 'ACTIVE' },
+                  select: {
+                    id: true,
+                    classId: true,
+                    class: { select: { id: true, name: true } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Profilo utente non trovato');
+    }
+
+    return user;
+  }
 }

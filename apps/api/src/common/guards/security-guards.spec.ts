@@ -7,6 +7,14 @@ import { ImportsController } from '../../modules/imports/imports.controller';
 import { PlatformController } from '../../modules/platform/platform.controller';
 import { SchoolsController } from '../../modules/schools/schools.controller';
 import { AuditController } from '../../modules/audit/audit.controller';
+import { TimetableController } from '../../modules/timetable/timetable.controller';
+import { LessonsController } from '../../modules/lessons/lessons.controller';
+import { AttendanceController } from '../../modules/attendance/attendance.controller';
+import { GradesController } from '../../modules/grades/grades.controller';
+import { HomeworkController } from '../../modules/homework/homework.controller';
+import { AgendaController } from '../../modules/agenda/agenda.controller';
+import { DisciplinaryNotesController } from '../../modules/disciplinary-notes/disciplinary-notes.controller';
+import { AnnouncementsController } from '../../modules/announcements/announcements.controller';
 import { GUARDS_METADATA } from '@nestjs/common/constants';
 
 describe('Security & Guard Coverage', () => {
@@ -18,6 +26,14 @@ describe('Security & Guard Coverage', () => {
     PlatformController,
     SchoolsController,
     AuditController,
+    TimetableController,
+    LessonsController,
+    AttendanceController,
+    GradesController,
+    HomeworkController,
+    AgendaController,
+    DisciplinaryNotesController,
+    AnnouncementsController,
   ];
 
   it('all administrative controllers have guards applied at class level', () => {

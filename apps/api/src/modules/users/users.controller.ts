@@ -51,6 +51,13 @@ export class UsersController {
     return this.usersService.createUser(schoolId, dto, actorUserId);
   }
 
+  @Get('me/profile')
+  @Roles(Role.SUPER_ADMIN, Role.SCHOOL_ADMIN, Role.TEACHER, Role.STUDENT, Role.PARENT)
+  @ApiOperation({ summary: 'Profilo utente corrente con classi e ruoli specifici' })
+  async getMyProfile(@CurrentUser('id') userId: string) {
+    return this.usersService.getMyProfile(userId);
+  }
+
   @Get(':id')
   @Roles(Role.SCHOOL_ADMIN, Role.SUPER_ADMIN, Role.TEACHER)
   @ApiOperation({ summary: 'Dettagli anagrafica utente' })

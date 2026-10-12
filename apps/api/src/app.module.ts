@@ -16,6 +16,14 @@ import { SubjectsModule } from './modules/subjects/subjects.module';
 import { TeachingAssignmentsModule } from './modules/teaching-assignments/teaching-assignments.module';
 import { ImportsModule } from './modules/imports/imports.module';
 import { AuditModule } from './modules/audit/audit.module';
+import { TimetableModule } from './modules/timetable/timetable.module';
+import { LessonsModule } from './modules/lessons/lessons.module';
+import { AttendanceModule } from './modules/attendance/attendance.module';
+import { GradesModule } from './modules/grades/grades.module';
+import { HomeworkModule } from './modules/homework/homework.module';
+import { AgendaModule } from './modules/agenda/agenda.module';
+import { DisciplinaryNotesModule } from './modules/disciplinary-notes/disciplinary-notes.module';
+import { AnnouncementsModule } from './modules/announcements/announcements.module';
 import { TenantMiddleware } from './common/tenant/tenant.middleware';
 
 @Module({
@@ -52,6 +60,14 @@ import { TenantMiddleware } from './common/tenant/tenant.middleware';
     TeachingAssignmentsModule,
     ImportsModule,
     AuditModule,
+    TimetableModule,
+    LessonsModule,
+    AttendanceModule,
+    GradesModule,
+    HomeworkModule,
+    AgendaModule,
+    DisciplinaryNotesModule,
+    AnnouncementsModule,
     HealthModule,
   ],
 })

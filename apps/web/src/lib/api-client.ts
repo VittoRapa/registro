@@ -12,7 +12,7 @@ export class ApiError extends Error {
   }
 }
 
-interface FetchOptions extends RequestInit {
+export interface FetchOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>;
 }
 
@@ -73,3 +73,30 @@ export async function apiClient<T>(endpoint: string, options: FetchOptions = {})
 
   return response.json() as Promise<T>;
 }
+
+apiClient.get = <T>(endpoint: string, options?: FetchOptions): Promise<T> =>
+  apiClient<T>(endpoint, { ...options, method: 'GET' });
+
+apiClient.post = <T>(endpoint: string, body?: unknown, options?: FetchOptions): Promise<T> =>
+  apiClient<T>(endpoint, {
+    ...options,
+    method: 'POST',
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+
+apiClient.patch = <T>(endpoint: string, body?: unknown, options?: FetchOptions): Promise<T> =>
+  apiClient<T>(endpoint, {
+    ...options,
+    method: 'PATCH',
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+
+apiClient.delete = <T>(endpoint: string, options?: FetchOptions): Promise<T> =>
+  apiClient<T>(endpoint, { ...options, method: 'DELETE' });
+
+apiClient.put = <T>(endpoint: string, body?: unknown, options?: FetchOptions): Promise<T> =>
+  apiClient<T>(endpoint, {
+    ...options,
+    method: 'PUT',
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
