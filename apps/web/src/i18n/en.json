@@ -1,0 +1,30 @@
+{
+  "common": {
+    "appName": "Electronic Register",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "actions": "Actions",
+    "back": "Back",
+    "error": "An error occurred"
+  },
+  "auth": {
+    "login": "Sign In",
+    "logout": "Sign Out",
+    "email": "Email Address",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "rememberMe": "Remember Me",
+    "loginDescription": "Sign in to your account to continue"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome to the Electronic Register",
+    "overview": "Activity overview",
+    "todayLessons": "Today's Lessons",
+    "recentNotes": "Recent Shared Notes",
+    "circulars": "Circulars and Announcements"
+  }
+}

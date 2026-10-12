@@ -1,0 +1,30 @@
+{
+  "common": {
+    "appName": "Registro Elettronico",
+    "loading": "Caricamento in corso...",
+    "save": "Salva",
+    "cancel": "Annulla",
+    "delete": "Elimina",
+    "edit": "Modifica",
+    "actions": "Azioni",
+    "back": "Indietro",
+    "error": "Si è verificato un errore"
+  },
+  "auth": {
+    "login": "Accedi",
+    "logout": "Esci",
+    "email": "Indirizzo Email",
+    "password": "Password",
+    "forgotPassword": "Password dimenticata?",
+    "rememberMe": "Ricordami",
+    "loginDescription": "Accedi al tuo account per continuare"
+  },
+  "dashboard": {
+    "title": "Pannello di Controllo",
+    "welcome": "Benvenuto nel Registro Elettronico",
+    "overview": "Panoramica delle attività",
+    "todayLessons": "Lezioni di oggi",
+    "recentNotes": "Appunti recenti",
+    "circulars": "Circolari e comunicazioni"
+  }
+}

@@ -1,0 +1,1297 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// =============================================================================
+// Enums
+// =============================================================================
+
+enum Role {
+  SUPER_ADMIN
+  SCHOOL_ADMIN
+  TEACHER
+  STUDENT
+  PARENT
+}
+
+enum UserStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+enum SchoolStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  TRANSFERRED
+  WITHDRAWN
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EARLY_EXIT
+}
+
+enum JustificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum JustificationReasonType {
+  MALATTIA
+  FAMIGLIA
+  ALTRO
+}
+
+enum GradeScaleType {
+  NUMERIC_10
+  NUMERIC_30
+  LETTER
+  JUDGEMENT
+}
+
+enum GradeType {
+  SCRITTO
+  ORALE
+  PRATICO
+  PROGETTO
+  TEST
+}
+
+enum LessonType {
+  LESSON
+  ACTIVITY
+  TEST
+  TRIP
+}
+
+enum DisciplinaryNoteType {
+  NOTA
+  RICHIAMO
+  SOSPENSIONE
+  ANNOTAZIONE_POSITIVA
+}
+
+enum AgendaEventType {
+  VERIFICA
+  INTERROGAZIONE
+  USCITA
+  EVENTO
+  RIUNIONE
+  FESTIVO
+}
+
+enum NoteVisibility {
+  PRIVATE
+  CLASS
+  GRADE_LEVEL
+  SCHOOL
+}
+
+enum NoteStatus {
+  DRAFT
+  PUBLISHED
+  HIDDEN
+  REMOVED
+}
+
+enum NoteLicense {
+  ORIGINALE
+  DA_FONTE_CON_PERMESSO
+}
+
+enum NoteReportReason {
+  COPYRIGHT
+  INAPPROPRIATO
+  ERRATO
+  SPAM
+}
+
+enum NoteReportStatus {
+  PENDING
+  RESOLVED_IGNORED
+  RESOLVED_HIDDEN
+  RESOLVED_REMOVED
+}
+
+enum FileScanStatus {
+  PENDING
+  CLEAN
+  INFECTED
+  ERROR
+}
+
+enum ImportJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum ParentRelationType {
+  PADRE
+  MADRE
+  TUTORE
+  ALTRO
+}
+
+enum MeetingMode {
+  PRESENZA
+  ONLINE
+}
+
+enum BookingStatus {
+  BOOKED
+  CANCELLED
+  DONE
+}
+
+enum ConversationType {
+  DIRECT
+  GROUP_CLASS
+}
+
+enum HomeworkSubmissionStatus {
+  TODO
+  DONE
+}
+
+// =============================================================================
+// School
+// =============================================================================
+
+model School {
+  id         String       @id @default(uuid()) @db.Uuid
+  name       String       @db.VarChar(255)
+  code       String?      @db.VarChar(50)  // Codice meccanografico, optional
+  slug       String       @unique @db.VarChar(100)
+  address    String?      @db.VarChar(255)
+  city       String?      @db.VarChar(100)
+  province   String?      @db.VarChar(10)
+  timezone   String       @default("Europe/Rome") @db.VarChar(50)
+  locale     String       @default("it") @db.VarChar(10)
+  logoFileId String?      @db.Uuid
+  settings   Json?        @db.JsonB  // scale voti, soglie assenze, finestra modifica, etc.
+  status     SchoolStatus @default(ACTIVE)
+  createdAt  DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime     @updatedAt @db.Timestamptz(6)
+
+  users          User[]
+  academicYears  AcademicYear[]
+  classes        Class[]
+  subjects       Subject[]
+  auditLogs      AuditLog[]
+  files          File[]
+  notifications  Notification[]
+
+  @@index([status])
+  @@index([slug])
+  @@map("schools")
+}
+
+// =============================================================================
+// User
+// =============================================================================
+
+model User {
+  id                  String     @id @default(uuid()) @db.Uuid
+  schoolId            String?    @db.Uuid
+  role                Role       @default(STUDENT)
+  email               String?    @db.VarChar(255)
+  username            String     @db.VarChar(100)
+  passwordHash        String     @db.VarChar(255)
+  firstName           String     @db.VarChar(100)
+  lastName            String     @db.VarChar(100)
+  birthDate           DateTime?  @db.Date
+  fiscalCode          String?    @db.VarChar(512)  // Encrypted at rest (AES-256-GCM)
+  phone               String?    @db.VarChar(50)
+  avatarFileId        String?    @db.Uuid
+  status              UserStatus @default(INVITED)
+  mustChangePassword  Boolean    @default(false)
+  twoFactorEnabled    Boolean    @default(false)
+  twoFactorSecret     String?    @db.VarChar(512)  // Encrypted at rest
+  lastLoginAt         DateTime?  @db.Timestamptz(6)
+  locale              String     @default("it") @db.VarChar(10)
+  consentAt           DateTime?  @db.Timestamptz(6)
+  consentVersion      String?    @db.VarChar(20)
+  deletedAt           DateTime?  @db.Timestamptz(6)
+  createdAt           DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime   @updatedAt @db.Timestamptz(6)
+
+  school               School?          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentProfile       StudentProfile?
+  teacherProfile       TeacherProfile?
+  parentLinksAsParent  ParentLink[]     @relation("ParentUser")
+  refreshTokens        RefreshToken[]
+  auditLogs            AuditLog[]       @relation("AuditActor")
+  createdLessons       LessonRecord[]   @relation("LessonSigner")
+  recordedAttendance   AttendanceRecord[] @relation("AttendanceRecorder")
+  createdGrades        Grade[]          @relation("GradeCreator")
+  createdNotes         DisciplinaryNote[] @relation("NoteCreator")
+  createdHomework      Homework[]
+  createdAgendaEvents  AgendaEvent[]
+  createdAnnouncements Announcement[]   @relation("AnnouncementAuthor")
+  announcementReads    AnnouncementRead[]
+  sentMessages         Message[]        @relation("MessageSender")
+  messageReads         MessageRead[]
+  conversationParticipants ConversationParticipant[]
+  ownedFiles           File[]           @relation("FileOwner")
+  sharedNotes          SharedNote[]     @relation("NoteAuthor")
+  noteComments         NoteComment[]
+  noteRatings          NoteRating[]
+  noteBookmarks        NoteBookmark[]
+  noteReports          NoteReport[]     @relation("NoteReporter")
+  resolvedReports      NoteReport[]     @relation("NoteReportResolver")
+  noteCollections      NoteCollection[]
+  notifications        Notification[]
+  notificationPreferences NotificationPreference[]
+  submittedJustifications Justification[] @relation("JustificationSubmitter")
+  reviewedJustifications  Justification[] @relation("JustificationReviewer")
+  teacherAvailability    TeacherAvailabilitySlot[]
+  meetingBookings        MeetingBooking[] @relation("BookingParent")
+
+  @@unique([schoolId, username])
+  @@unique([schoolId, email])
+  @@index([schoolId])
+  @@index([role])
+  @@index([status])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+// =============================================================================
+// Profiles
+// =============================================================================
+
+model StudentProfile {
+  id                  String    @id @default(uuid()) @db.Uuid
+  userId              String    @unique @db.Uuid
+  matricola           String?   @db.VarChar(50)
+  gender              String?   @db.VarChar(10)
+  notes               String?   @db.Text  // Admin-only notes
+  guardianConsentAt   DateTime? @db.Timestamptz(6)
+  createdAt           DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime  @updatedAt @db.Timestamptz(6)
+
+  user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enrollments         Enrollment[]
+  parentLinks         ParentLink[]
+  attendanceRecords   AttendanceRecord[]
+  grades              Grade[]
+  disciplinaryNotes   DisciplinaryNote[] @relation("NoteStudent")
+  homeworkStatuses    HomeworkStatus[]
+  meetingBookings     MeetingBooking[]   @relation("BookingStudent")
+
+  @@index([userId])
+  @@index([matricola])
+  @@map("student_profiles")
+}
+
+model TeacherProfile {
+  id                  String    @id @default(uuid()) @db.Uuid
+  userId              String    @unique @db.Uuid
+  employeeCode        String?   @db.VarChar(50)
+  bio                 String?   @db.Text
+  officeHours         Json?     @db.JsonB  // Structured office hours
+  createdAt           DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime  @updatedAt @db.Timestamptz(6)
+
+  user                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teachingAssignments  TeachingAssignment[]
+
+  @@index([userId])
+  @@map("teacher_profiles")
+}
+
+model ParentLink {
+  id               String             @id @default(uuid()) @db.Uuid
+  parentUserId     String             @db.Uuid
+  studentProfileId String             @db.Uuid
+  relationship     ParentRelationType @default(TUTORE)
+  isPrimary        Boolean            @default(false)
+  canJustify       Boolean            @default(true)
+  createdAt        DateTime           @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime           @updatedAt @db.Timestamptz(6)
+
+  parent           User               @relation("ParentUser", fields: [parentUserId], references: [id], onDelete: Cascade)
+  studentProfile   StudentProfile     @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([parentUserId, studentProfileId])
+  @@index([parentUserId])
+  @@index([studentProfileId])
+  @@map("parent_links")
+}
+
+// =============================================================================
+// Academic Structure
+// =============================================================================
+
+model AcademicYear {
+  id        String   @id @default(uuid()) @db.Uuid
+  schoolId  String   @db.Uuid
+  name      String   @db.VarChar(50)  // e.g. "2026/2027"
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  isCurrent Boolean  @default(false)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  school              School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  terms               Term[]
+  classes             Class[]
+  teachingAssignments TeachingAssignment[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId])
+  @@index([isCurrent])
+  @@map("academic_years")
+}
+
+model Term {
+  id             String   @id @default(uuid()) @db.Uuid
+  academicYearId String   @db.Uuid
+  name           String   @db.VarChar(100)  // e.g. "Primo Quadrimestre"
+  startDate      DateTime @db.Date
+  endDate        DateTime @db.Date
+  order          Int      @db.SmallInt
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @db.Timestamptz(6)
+
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  grades         Grade[]
+
+  @@index([academicYearId])
+  @@map("terms")
+}
+
+model Class {
+  id                    String   @id @default(uuid()) @db.Uuid
+  schoolId              String   @db.Uuid
+  academicYearId        String   @db.Uuid
+  name                  String   @db.VarChar(50)     // e.g. "3A"
+  grade                 Int      @db.SmallInt         // 1-5
+  section               String   @db.VarChar(10)      // A, B, C
+  track                 String?  @db.VarChar(200)     // Indirizzo: Scientifico Scienze Applicate
+  coordinatorTeacherId  String?  @db.Uuid
+  room                  String?  @db.VarChar(50)      // Default room
+  createdAt             DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime @updatedAt @db.Timestamptz(6)
+
+  school               School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  academicYear         AcademicYear         @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  enrollments          Enrollment[]
+  teachingAssignments  TeachingAssignment[]
+  timetableSlots       TimetableSlot[]
+  lessonRecords        LessonRecord[]
+  homework             Homework[]
+  disciplinaryNotes    DisciplinaryNote[]   @relation("ClassNote")
+  agendaEvents         AgendaEvent[]
+  announcements        Announcement[]       @relation("AnnouncementClass")
+  sharedNotes          SharedNote[]
+
+  @@unique([schoolId, academicYearId, name])
+  @@index([schoolId])
+  @@index([academicYearId])
+  @@map("classes")
+}
+
+model Subject {
+  id        String   @id @default(uuid()) @db.Uuid
+  schoolId  String   @db.Uuid
+  name      String   @db.VarChar(100)
+  shortName String?  @db.VarChar(20)
+  color     String?  @db.VarChar(7)  // Hex color for UI
+  isGraded  Boolean  @default(true)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  school               School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  teachingAssignments  TeachingAssignment[]
+  sharedNotes          SharedNote[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId])
+  @@map("subjects")
+}
+
+model TeachingAssignment {
+  id              String   @id @default(uuid()) @db.Uuid
+  classId         String   @db.Uuid
+  subjectId       String   @db.Uuid
+  teacherProfileId String  @db.Uuid
+  academicYearId  String   @db.Uuid
+  hoursPerWeek    Int?     @db.SmallInt
+  createdAt       DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @db.Timestamptz(6)
+
+  class            Class          @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject          Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+  academicYear     AcademicYear   @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  timetableSlots   TimetableSlot[]
+  lessonRecords    LessonRecord[]
+  grades           Grade[]
+  assessments      Assessment[]
+  homework         Homework[]
+  materials        Material[]
+
+  @@unique([classId, subjectId, teacherProfileId])
+  @@index([classId])
+  @@index([subjectId])
+  @@index([teacherProfileId])
+  @@index([academicYearId])
+  @@map("teaching_assignments")
+}
+
+model Enrollment {
+  id               String           @id @default(uuid()) @db.Uuid
+  classId          String           @db.Uuid
+  studentProfileId String           @db.Uuid
+  startDate        DateTime         @default(now()) @db.Date
+  endDate          DateTime?        @db.Date
+  status           EnrollmentStatus @default(ACTIVE)
+  createdAt        DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime         @updatedAt @db.Timestamptz(6)
+
+  class            Class          @relation(fields: [classId], references: [id], onDelete: Cascade)
+  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([studentProfileId, classId])
+  @@index([classId])
+  @@index([studentProfileId])
+  @@index([status])
+  @@map("enrollments")
+}
+
+// =============================================================================
+// Timetable
+// =============================================================================
+
+model TimetableSlot {
+  id                   String   @id @default(uuid()) @db.Uuid
+  classId              String   @db.Uuid
+  teachingAssignmentId String   @db.Uuid
+  weekday              Int      @db.SmallInt  // 1=Mon ... 6=Sat
+  periodNumber         Int      @db.SmallInt
+  startTime            String   @db.VarChar(5)  // "08:00"
+  endTime              String   @db.VarChar(5)  // "09:00"
+  room                 String?  @db.VarChar(50)
+  validFrom            DateTime @db.Date
+  validTo              DateTime? @db.Date
+  createdAt            DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime @updatedAt @db.Timestamptz(6)
+
+  class                Class              @relation(fields: [classId], references: [id], onDelete: Cascade)
+  teachingAssignment   TeachingAssignment @relation(fields: [teachingAssignmentId], references: [id], onDelete: Cascade)
+  substitutions        TimetableSubstitution[]
+
+  @@index([classId, weekday])
+  @@index([teachingAssignmentId])
+  @@map("timetable_slots")
+}
+
+model TimetableSubstitution {
+  id                    String   @id @default(uuid()) @db.Uuid
+  slotId                String   @db.Uuid
+  date                  DateTime @db.Date
+  substituteTeacherId   String?  @db.Uuid
+  reason                String?  @db.VarChar(255)
+  createdAt             DateTime @default(now()) @db.Timestamptz(6)
+
+  slot                  TimetableSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
+
+  @@index([slotId, date])
+  @@map("timetable_substitutions")
+}
+
+// =============================================================================
+// Lessons & Attendance
+// =============================================================================
+
+model LessonRecord {
+  id                   String     @id @default(uuid()) @db.Uuid
+  teachingAssignmentId String     @db.Uuid
+  classId              String     @db.Uuid
+  date                 DateTime   @db.Date
+  periodNumber         Int        @db.SmallInt
+  topic                String?    @db.Text
+  notes                String?    @db.Text
+  type                 LessonType @default(LESSON)
+  signedByTeacherId    String?    @db.Uuid
+  signedAt             DateTime?  @db.Timestamptz(6)
+  createdAt            DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime   @updatedAt @db.Timestamptz(6)
+
+  teachingAssignment   TeachingAssignment @relation(fields: [teachingAssignmentId], references: [id], onDelete: Cascade)
+  class                Class              @relation(fields: [classId], references: [id], onDelete: Cascade)
+  signedByTeacher      User?              @relation("LessonSigner", fields: [signedByTeacherId], references: [id])
+  attendanceRecords    AttendanceRecord[]
+
+  @@unique([classId, date, periodNumber])
+  @@index([teachingAssignmentId])
+  @@index([classId, date])
+  @@map("lesson_records")
+}
+
+model AttendanceRecord {
+  id                   String           @id @default(uuid()) @db.Uuid
+  lessonRecordId       String           @db.Uuid
+  studentProfileId     String           @db.Uuid
+  status               AttendanceStatus @default(PRESENT)
+  minutesLate          Int?             @db.SmallInt
+  exitTime             String?          @db.VarChar(5)  // "11:30"
+  recordedByTeacherId  String?          @db.Uuid
+  justificationId      String?          @db.Uuid
+  createdAt            DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime         @updatedAt @db.Timestamptz(6)
+
+  lessonRecord         LessonRecord   @relation(fields: [lessonRecordId], references: [id], onDelete: Cascade)
+  studentProfile       StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  recordedByTeacher    User?          @relation("AttendanceRecorder", fields: [recordedByTeacherId], references: [id])
+  justification        Justification? @relation(fields: [justificationId], references: [id])
+
+  @@unique([lessonRecordId, studentProfileId])
+  @@index([lessonRecordId])
+  @@index([studentProfileId])
+  @@map("attendance_records")
+}
+
+model Justification {
+  id                String              @id @default(uuid()) @db.Uuid
+  studentProfileId  String              @db.Uuid
+  dateFrom          DateTime            @db.Date
+  dateTo            DateTime            @db.Date
+  reasonType        JustificationReasonType @default(ALTRO)
+  reasonText        String?             @db.Text
+  submittedByUserId String              @db.Uuid
+  status            JustificationStatus @default(PENDING)
+  reviewedByUserId  String?             @db.Uuid
+  reviewedAt        DateTime?           @db.Timestamptz(6)
+  attachmentFileId  String?             @db.Uuid
+  createdAt         DateTime            @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime            @updatedAt @db.Timestamptz(6)
+
+  submittedBy       User                @relation("JustificationSubmitter", fields: [submittedByUserId], references: [id])
+  reviewedBy        User?               @relation("JustificationReviewer", fields: [reviewedByUserId], references: [id])
+  attendanceRecords AttendanceRecord[]
+
+  @@index([studentProfileId])
+  @@index([status])
+  @@map("justifications")
+}
+
+// =============================================================================
+// Grades
+// =============================================================================
+
+model Grade {
+  id                   String         @id @default(uuid()) @db.Uuid
+  teachingAssignmentId String         @db.Uuid
+  studentProfileId     String         @db.Uuid
+  termId               String?        @db.Uuid
+  value                Decimal?       @db.Decimal(4, 2)
+  scaleType            GradeScaleType @default(NUMERIC_10)
+  displayValue         String?        @db.VarChar(20)  // e.g. "7+", "7½"
+  weight               Decimal        @default(1.0) @db.Decimal(3, 2)
+  type                 GradeType      @default(ORALE)
+  date                 DateTime       @db.Date
+  description          String?        @db.Text
+  visibleToStudent     Boolean        @default(true)
+  visibleFromAt        DateTime?      @db.Timestamptz(6)  // Deferred publication
+  assessmentId         String?        @db.Uuid
+  createdByTeacherId   String         @db.Uuid
+  lockedAt             DateTime?      @db.Timestamptz(6)
+  deletedAt            DateTime?      @db.Timestamptz(6)
+  createdAt            DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime       @updatedAt @db.Timestamptz(6)
+
+  teachingAssignment   TeachingAssignment @relation(fields: [teachingAssignmentId], references: [id], onDelete: Cascade)
+  studentProfile       StudentProfile     @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  term                 Term?              @relation(fields: [termId], references: [id])
+  assessment           Assessment?        @relation(fields: [assessmentId], references: [id])
+  createdByTeacher     User               @relation("GradeCreator", fields: [createdByTeacherId], references: [id])
+
+  @@index([teachingAssignmentId])
+  @@index([studentProfileId])
+  @@index([termId])
+  @@index([date])
+  @@index([deletedAt])
+  @@map("grades")
+}
+
+model Assessment {
+  id                   String   @id @default(uuid()) @db.Uuid
+  teachingAssignmentId String   @db.Uuid
+  date                 DateTime @db.Date
+  title                String   @db.VarChar(255)
+  type                 GradeType @default(SCRITTO)
+  maxScore             Decimal? @db.Decimal(5, 2)
+  notifyDate           DateTime? @db.Date
+  createdAt            DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime @updatedAt @db.Timestamptz(6)
+
+  teachingAssignment   TeachingAssignment @relation(fields: [teachingAssignmentId], references: [id], onDelete: Cascade)
+  grades               Grade[]
+
+  @@index([teachingAssignmentId])
+  @@index([date])
+  @@map("assessments")
+}
+
+// =============================================================================
+// Homework
+// =============================================================================
+
+model Homework {
+  id                   String   @id @default(uuid()) @db.Uuid
+  teachingAssignmentId String   @db.Uuid
+  classId              String   @db.Uuid
+  createdByUserId      String   @db.Uuid
+  assignedDate         DateTime @db.Date
+  dueDate              DateTime @db.Date
+  title                String   @db.VarChar(255)
+  description          String?  @db.Text
+  attachmentFileIds    String[] @db.Uuid
+  estimatedMinutes     Int?     @db.SmallInt
+  createdAt            DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime @updatedAt @db.Timestamptz(6)
+
+  teachingAssignment   TeachingAssignment @relation(fields: [teachingAssignmentId], references: [id], onDelete: Cascade)
+  class                Class              @relation(fields: [classId], references: [id], onDelete: Cascade)
+  createdBy            User               @relation(fields: [createdByUserId], references: [id])
+  statuses             HomeworkStatus[]
+
+  @@index([classId, dueDate])
+  @@index([teachingAssignmentId])
+  @@map("homework")
+}
+
+model HomeworkStatus {
+  id               String                  @id @default(uuid()) @db.Uuid
+  homeworkId       String                  @db.Uuid
+  studentProfileId String                  @db.Uuid
+  status           HomeworkSubmissionStatus @default(TODO)
+  doneAt           DateTime?               @db.Timestamptz(6)
+  createdAt        DateTime                @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime                @updatedAt @db.Timestamptz(6)
+
+  homework         Homework       @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([homeworkId, studentProfileId])
+  @@map("homework_statuses")
+}
+
+// =============================================================================
+// Disciplinary Notes
+// =============================================================================
+
+model DisciplinaryNote {
+  id                    String                @id @default(uuid()) @db.Uuid
+  studentProfileId      String?               @db.Uuid
+  classId               String?               @db.Uuid  // For class-wide notes
+  teacherId             String                @db.Uuid
+  type                  DisciplinaryNoteType  @default(NOTA)
+  text                  String                @db.Text
+  date                  DateTime              @db.Date
+  visibleToParent       Boolean               @default(true)
+  acknowledgedByParentAt DateTime?            @db.Timestamptz(6)
+  createdAt             DateTime              @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime              @updatedAt @db.Timestamptz(6)
+
+  studentProfile        StudentProfile? @relation("NoteStudent", fields: [studentProfileId], references: [id], onDelete: Cascade)
+  class                 Class?          @relation("ClassNote", fields: [classId], references: [id], onDelete: Cascade)
+  teacher               User            @relation("NoteCreator", fields: [teacherId], references: [id])
+
+  @@index([studentProfileId])
+  @@index([classId])
+  @@index([date])
+  @@map("disciplinary_notes")
+}
+
+// =============================================================================
+// Agenda Events
+// =============================================================================
+
+model AgendaEvent {
+  id              String          @id @default(uuid()) @db.Uuid
+  classId         String?         @db.Uuid
+  createdByUserId String          @db.Uuid
+  type            AgendaEventType @default(EVENTO)
+  title           String          @db.VarChar(255)
+  description     String?         @db.Text
+  startAt         DateTime        @db.Timestamptz(6)
+  endAt           DateTime?       @db.Timestamptz(6)
+  allDay          Boolean         @default(false)
+  createdAt       DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime        @updatedAt @db.Timestamptz(6)
+
+  class           Class?  @relation(fields: [classId], references: [id], onDelete: Cascade)
+  createdBy       User    @relation(fields: [createdByUserId], references: [id])
+
+  @@index([classId])
+  @@index([startAt])
+  @@map("agenda_events")
+}
+
+// =============================================================================
+// Announcements
+// =============================================================================
+
+model Announcement {
+  id          String    @id @default(uuid()) @db.Uuid
+  authorId    String    @db.Uuid
+  classId     String?   @db.Uuid
+  title       String    @db.VarChar(255)
+  body        String    @db.Text  // HTML sanitized or Markdown
+  audience    Json?     @db.JsonB  // { roles: [], classIds: [], userIds: [] }
+  publishAt   DateTime? @db.Timestamptz(6)
+  expiresAt   DateTime? @db.Timestamptz(6)
+  requiresAck Boolean   @default(false)
+  attachmentFileIds String[] @db.Uuid
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(6)
+
+  author      User              @relation("AnnouncementAuthor", fields: [authorId], references: [id])
+  class       Class?            @relation("AnnouncementClass", fields: [classId], references: [id])
+  reads       AnnouncementRead[]
+
+  @@index([authorId])
+  @@index([publishAt])
+  @@map("announcements")
+}
+
+model AnnouncementRead {
+  id             String    @id @default(uuid()) @db.Uuid
+  announcementId String    @db.Uuid
+  userId         String    @db.Uuid
+  readAt         DateTime  @default(now()) @db.Timestamptz(6)
+  ackAt          DateTime? @db.Timestamptz(6)
+
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([announcementId, userId])
+  @@map("announcement_reads")
+}
+
+// =============================================================================
+// Messaging
+// =============================================================================
+
+model Conversation {
+  id           String           @id @default(uuid()) @db.Uuid
+  type         ConversationType @default(DIRECT)
+  createdAt    DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime         @updatedAt @db.Timestamptz(6)
+
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  id             String   @id @default(uuid()) @db.Uuid
+  conversationId String   @db.Uuid
+  userId         String   @db.Uuid
+  joinedAt       DateTime @default(now()) @db.Timestamptz(6)
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@map("conversation_participants")
+}
+
+model Message {
+  id             String    @id @default(uuid()) @db.Uuid
+  conversationId String    @db.Uuid
+  senderId       String    @db.Uuid
+  body           String    @db.Text
+  attachmentFileIds String[] @db.Uuid
+  sentAt         DateTime  @default(now()) @db.Timestamptz(6)
+  editedAt       DateTime? @db.Timestamptz(6)
+  deletedAt      DateTime? @db.Timestamptz(6)
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation("MessageSender", fields: [senderId], references: [id])
+  reads          MessageRead[]
+
+  @@index([conversationId, sentAt])
+  @@map("messages")
+}
+
+model MessageRead {
+  id        String   @id @default(uuid()) @db.Uuid
+  messageId String   @db.Uuid
+  userId    String   @db.Uuid
+  readAt    DateTime @default(now()) @db.Timestamptz(6)
+
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@map("message_reads")
+}
+
+// =============================================================================
+// Meetings (Colloqui)
+// =============================================================================
+
+model TeacherAvailabilitySlot {
+  id        String      @id @default(uuid()) @db.Uuid
+  teacherId String      @db.Uuid
+  startAt   DateTime    @db.Timestamptz(6)
+  endAt     DateTime    @db.Timestamptz(6)
+  capacity  Int         @default(1) @db.SmallInt
+  mode      MeetingMode @default(PRESENZA)
+  link      String?     @db.VarChar(500)
+  createdAt DateTime    @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime    @updatedAt @db.Timestamptz(6)
+
+  teacher   User              @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  bookings  MeetingBooking[]
+
+  @@index([teacherId, startAt])
+  @@map("teacher_availability_slots")
+}
+
+model MeetingBooking {
+  id               String        @id @default(uuid()) @db.Uuid
+  slotId           String        @db.Uuid
+  parentUserId     String        @db.Uuid
+  studentProfileId String        @db.Uuid
+  status           BookingStatus @default(BOOKED)
+  note             String?       @db.Text
+  createdAt        DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime      @updatedAt @db.Timestamptz(6)
+
+  slot             TeacherAvailabilitySlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  parent           User                   @relation("BookingParent", fields: [parentUserId], references: [id])
+  studentProfile   StudentProfile         @relation("BookingStudent", fields: [studentProfileId], references: [id])
+
+  @@index([slotId])
+  @@index([parentUserId])
+  @@map("meeting_bookings")
+}
+
+// =============================================================================
+// Materials
+// =============================================================================
+
+model MaterialFolder {
+  id                   String   @id @default(uuid()) @db.Uuid
+  teachingAssignmentId String?  @db.Uuid
+  parentFolderId       String?  @db.Uuid
+  name                 String   @db.VarChar(255)
+  createdAt            DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime @updatedAt @db.Timestamptz(6)
+
+  parentFolder         MaterialFolder?  @relation("FolderHierarchy", fields: [parentFolderId], references: [id])
+  childFolders         MaterialFolder[] @relation("FolderHierarchy")
+  materials            Material[]
+
+  @@map("material_folders")
+}
+
+model Material {
+  id                   String    @id @default(uuid()) @db.Uuid
+  teachingAssignmentId String    @db.Uuid
+  title                String    @db.VarChar(255)
+  description          String?   @db.Text
+  fileIds              String[]  @db.Uuid
+  folderId             String?   @db.Uuid
+  visibleFrom          DateTime? @db.Timestamptz(6)
+  createdAt            DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime  @updatedAt @db.Timestamptz(6)
+
+  teachingAssignment   TeachingAssignment @relation(fields: [teachingAssignmentId], references: [id], onDelete: Cascade)
+  folder               MaterialFolder?    @relation(fields: [folderId], references: [id])
+
+  @@index([teachingAssignmentId])
+  @@map("materials")
+}
+
+// =============================================================================
+// Files
+// =============================================================================
+
+model File {
+  id            String         @id @default(uuid()) @db.Uuid
+  schoolId      String         @db.Uuid
+  ownerId       String         @db.Uuid
+  storageKey    String         @db.VarChar(500)
+  originalName  String         @db.VarChar(255)
+  mimeType      String         @db.VarChar(100)
+  sizeBytes     BigInt
+  sha256        String?        @db.VarChar(64)
+  scanStatus    FileScanStatus @default(PENDING)
+  previewKey    String?        @db.VarChar(500)
+  pageCount     Int?           @db.SmallInt
+  createdAt     DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime       @updatedAt @db.Timestamptz(6)
+
+  school        School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  owner         User   @relation("FileOwner", fields: [ownerId], references: [id])
+
+  @@index([schoolId])
+  @@index([ownerId])
+  @@index([sha256])
+  @@index([scanStatus])
+  @@map("files")
+}
+
+// =============================================================================
+// Shared Notes (Appunti Condivisi)
+// =============================================================================
+
+model SharedNote {
+  id            String         @id @default(uuid()) @db.Uuid
+  schoolId      String         @db.Uuid
+  authorId      String         @db.Uuid
+  subjectId     String?        @db.Uuid
+  classId       String?        @db.Uuid
+  grade         Int?           @db.SmallInt  // Year level
+  title         String         @db.VarChar(255)
+  description   String?        @db.Text
+  contentType   String         @default("FILE") @db.VarChar(20)  // FILE or MARKDOWN
+  markdownBody  String?        @db.Text
+  fileIds       String[]       @db.Uuid
+  visibility    NoteVisibility @default(CLASS)
+  status        NoteStatus     @default(DRAFT)
+  license       NoteLicense    @default(ORIGINALE)
+  downloadCount Int            @default(0)
+  viewCount     Int            @default(0)
+  avgRating     Decimal        @default(0) @db.Decimal(3, 2)
+  ratingCount   Int            @default(0)
+  searchVector  Unsupported("tsvector")?
+  verifiedByTeacherId String?  @db.Uuid
+  verifiedAt    DateTime?      @db.Timestamptz(6)
+  createdAt     DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime       @updatedAt @db.Timestamptz(6)
+
+  author        User          @relation("NoteAuthor", fields: [authorId], references: [id])
+  subject       Subject?      @relation(fields: [subjectId], references: [id])
+  class         Class?        @relation(fields: [classId], references: [id])
+  tags          SharedNoteTag[]
+  comments      NoteComment[]
+  ratings       NoteRating[]
+  bookmarks     NoteBookmark[]
+  reports       NoteReport[]
+  versions      NoteVersion[]
+
+  @@index([schoolId, subjectId, status, createdAt])
+  @@index([authorId])
+  @@index([status])
+  @@map("shared_notes")
+}
+
+model NoteTag {
+  id        String          @id @default(uuid()) @db.Uuid
+  name      String          @unique @db.VarChar(100)
+  createdAt DateTime        @default(now()) @db.Timestamptz(6)
+
+  sharedNotes SharedNoteTag[]
+
+  @@map("note_tags")
+}
+
+model SharedNoteTag {
+  id           String   @id @default(uuid()) @db.Uuid
+  sharedNoteId String   @db.Uuid
+  tagId        String   @db.Uuid
+
+  sharedNote   SharedNote @relation(fields: [sharedNoteId], references: [id], onDelete: Cascade)
+  tag          NoteTag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([sharedNoteId, tagId])
+  @@map("shared_note_tags")
+}
+
+model NoteComment {
+  id           String    @id @default(uuid()) @db.Uuid
+  noteId       String    @db.Uuid
+  authorId     String    @db.Uuid
+  parentId     String?   @db.Uuid  // For nested replies (one level)
+  body         String    @db.Text
+  editedAt     DateTime? @db.Timestamptz(6)
+  deletedAt    DateTime? @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @db.Timestamptz(6)
+
+  note         SharedNote    @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  author       User          @relation(fields: [authorId], references: [id])
+  parent       NoteComment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies      NoteComment[] @relation("CommentReplies")
+
+  @@index([noteId])
+  @@index([authorId])
+  @@map("note_comments")
+}
+
+model NoteRating {
+  id           String   @id @default(uuid()) @db.Uuid
+  noteId       String   @db.Uuid
+  userId       String   @db.Uuid
+  stars        Int      @db.SmallInt  // 1-5
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(6)
+
+  note         SharedNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id])
+
+  @@unique([noteId, userId])
+  @@map("note_ratings")
+}
+
+model NoteBookmark {
+  id           String   @id @default(uuid()) @db.Uuid
+  noteId       String   @db.Uuid
+  userId       String   @db.Uuid
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+
+  note         SharedNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id])
+
+  @@unique([noteId, userId])
+  @@map("note_bookmarks")
+}
+
+model NoteReport {
+  id           String           @id @default(uuid()) @db.Uuid
+  noteId       String           @db.Uuid
+  reporterId   String           @db.Uuid
+  reason       NoteReportReason
+  details      String?          @db.Text
+  status       NoteReportStatus @default(PENDING)
+  resolvedById String?          @db.Uuid
+  resolvedAt   DateTime?        @db.Timestamptz(6)
+  createdAt    DateTime         @default(now()) @db.Timestamptz(6)
+
+  note         SharedNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  reporter     User       @relation("NoteReporter", fields: [reporterId], references: [id])
+  resolvedBy   User?      @relation("NoteReportResolver", fields: [resolvedById], references: [id])
+
+  @@index([noteId])
+  @@index([status])
+  @@map("note_reports")
+}
+
+model NoteVersion {
+  id           String   @id @default(uuid()) @db.Uuid
+  noteId       String   @db.Uuid
+  version      Int      @db.SmallInt
+  fileIds      String[] @db.Uuid
+  changelog    String?  @db.Text
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+
+  note         SharedNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@unique([noteId, version])
+  @@index([noteId])
+  @@map("note_versions")
+}
+
+model NoteCollection {
+  id        String   @id @default(uuid()) @db.Uuid
+  ownerId   String   @db.Uuid
+  name      String   @db.VarChar(255)
+  noteIds   String[] @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  owner     User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@map("note_collections")
+}
+
+// =============================================================================
+// Notifications
+// =============================================================================
+
+model Notification {
+  id        String    @id @default(uuid()) @db.Uuid
+  schoolId  String?   @db.Uuid
+  userId    String    @db.Uuid
+  type      String    @db.VarChar(50)
+  title     String    @db.VarChar(255)
+  body      String?   @db.Text
+  data      Json?     @db.JsonB  // { deepLink, entityType, entityId }
+  readAt    DateTime? @db.Timestamptz(6)
+  channel   String    @default("IN_APP") @db.VarChar(20)
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+
+  school    School? @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([schoolId])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  type      String   @db.VarChar(50)  // e.g. "NEW_GRADE", "NEW_HOMEWORK"
+  email     Boolean  @default(true)
+  inApp     Boolean  @default(true)
+  push      Boolean  @default(true)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type])
+  @@map("notification_preferences")
+}
+
+model PushToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  platform  String   @db.VarChar(20)  // ios, android, web
+  token     String   @db.VarChar(500)
+  deviceId  String?  @db.VarChar(100)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  @@unique([userId, token])
+  @@index([userId])
+  @@map("push_tokens")
+}
+
+// =============================================================================
+// Auth & Session
+// =============================================================================
+
+model RefreshToken {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  tokenHash  String    @unique @db.VarChar(255)
+  deviceInfo String?   @db.VarChar(255)
+  expiresAt  DateTime  @db.Timestamptz(6)
+  revokedAt  DateTime? @db.Timestamptz(6)
+  replacedBy String?   @db.Uuid  // For token family tracking
+  createdAt  DateTime  @default(now()) @db.Timestamptz(6)
+
+  user       User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  tokenHash String   @unique @db.VarChar(255)
+  expiresAt DateTime @db.Timestamptz(6)
+  usedAt    DateTime? @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([tokenHash])
+  @@map("password_reset_tokens")
+}
+
+model ActivationToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  tokenHash String   @unique @db.VarChar(255)
+  expiresAt DateTime @db.Timestamptz(6)
+  usedAt    DateTime? @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([tokenHash])
+  @@map("activation_tokens")
+}
+
+model TwoFactorBackupCode {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  codeHash  String    @db.VarChar(255)
+  usedAt    DateTime? @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([userId])
+  @@map("two_factor_backup_codes")
+}
+
+// =============================================================================
+// Audit Log (append-only)
+// =============================================================================
+
+model AuditLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  schoolId     String?  @db.Uuid
+  actorUserId  String?  @db.Uuid
+  actorRole    String?  @db.VarChar(20)
+  action       String   @db.VarChar(100)  // e.g. GRADE_CREATED, ATTENDANCE_CHANGED
+  entityType   String   @db.VarChar(100)
+  entityId     String?  @db.VarChar(100)
+  before       Json?    @db.JsonB
+  after        Json?    @db.JsonB
+  ip           String?  @db.VarChar(45)
+  userAgent    String?  @db.Text
+  prevHash     String?  @db.VarChar(64)  // Optional hash chain
+  hash         String?  @db.VarChar(64)
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+
+  school       School? @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  actor        User?   @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  // No update/delete endpoints - append-only
+  @@index([schoolId])
+  @@index([actorUserId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// =============================================================================
+// Import/Export Jobs
+// =============================================================================
+
+model ImportJob {
+  id        String          @id @default(uuid()) @db.Uuid
+  schoolId  String          @db.Uuid
+  type      String          @db.VarChar(50)  // STUDENTS, TEACHERS, PARENTS
+  fileId    String          @db.Uuid
+  status    ImportJobStatus @default(PENDING)
+  report    Json?           @db.JsonB  // { processed, errors[], created[], skipped[] }
+  createdAt DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime        @updatedAt @db.Timestamptz(6)
+
+  @@index([schoolId])
+  @@index([status])
+  @@map("import_jobs")
+}
+
+model ExportJob {
+  id         String   @id @default(uuid()) @db.Uuid
+  schoolId   String   @db.Uuid
+  type       String   @db.VarChar(50)
+  format     String   @db.VarChar(10)  // CSV, PDF
+  status     String   @default("PENDING") @db.VarChar(20)
+  fileId     String?  @db.Uuid
+  parameters Json?    @db.JsonB
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @db.Timestamptz(6)
+
+  @@index([schoolId])
+  @@map("export_jobs")
+}

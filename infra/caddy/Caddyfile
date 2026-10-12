@@ -1,0 +1,30 @@
+{
+    admin off
+    email admin@registro.local
+}
+
+# Production domain configuration example
+registro.local {
+    encode gzip zstd
+
+    # Route API and Docs to NestJS backend
+    handle /api/* {
+        reverse_proxy api:4000
+    }
+    handle /docs* {
+        reverse_proxy api:4000
+    }
+
+    # Route all other web frontend requests to Next.js
+    handle {
+        reverse_proxy web:3000
+    }
+
+    # Security headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+}
