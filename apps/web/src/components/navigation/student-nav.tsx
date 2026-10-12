@@ -9,6 +9,7 @@ import {
   BookOpen,
   Clock,
   Bell,
+  FileText,
   LogOut,
   ShieldCheck,
 } from 'lucide-react';
@@ -26,6 +27,7 @@ export function StudentNav() {
     { label: 'Assenze', href: '/assenze', icon: Clock },
     { label: 'Compiti', href: '/compiti', icon: BookOpen },
     { label: 'Orario', href: '/orario', icon: Calendar },
+    { label: 'Appunti', href: '/appunti', icon: FileText },
     { label: 'Circolari', href: '/comunicazioni', icon: Bell },
   ];
 

@@ -15,6 +15,9 @@ import { HomeworkController } from '../../modules/homework/homework.controller';
 import { AgendaController } from '../../modules/agenda/agenda.controller';
 import { DisciplinaryNotesController } from '../../modules/disciplinary-notes/disciplinary-notes.controller';
 import { AnnouncementsController } from '../../modules/announcements/announcements.controller';
+import { FilesController } from '../../modules/files/files.controller';
+import { SharedNotesController } from '../../modules/shared-notes/shared-notes.controller';
+import { ModerationController } from '../../modules/moderation/moderation.controller';
 import { GUARDS_METADATA } from '@nestjs/common/constants';
 
 describe('Security & Guard Coverage', () => {
@@ -34,6 +37,9 @@ describe('Security & Guard Coverage', () => {
     AgendaController,
     DisciplinaryNotesController,
     AnnouncementsController,
+    FilesController,
+    SharedNotesController,
+    ModerationController,
   ];
 
   it('all administrative controllers have guards applied at class level', () => {

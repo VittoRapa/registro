@@ -10,6 +10,8 @@ import {
   Calendar,
   AlertTriangle,
   Bell,
+  FileText,
+  ShieldAlert,
   LogOut,
   LayoutDashboard,
   ShieldCheck,
@@ -40,6 +42,8 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
     { label: 'Agenda & Verifiche', href: '/docente/agenda', icon: Calendar },
     { label: 'Note Disciplinari', href: '/docente/note', icon: AlertTriangle },
     { label: 'Comunicazioni', href: '/docente/comunicazioni', icon: Bell },
+    { label: 'Appunti', href: '/appunti', icon: FileText },
+    { label: 'Moderazione', href: '/docente/moderazione', icon: ShieldAlert },
   ];
 
   const handleLogout = async () => {

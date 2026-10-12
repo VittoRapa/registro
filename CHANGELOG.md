@@ -5,6 +5,35 @@ Tutte le modifiche rilevanti a questo progetto saranno documentate in questo fil
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/)
 e questo progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.4.0] - 2026-10-12
+
+### Aggiunto
+- **Modulo Storage & File Pipeline Sicura (`/files`)**:
+  - Upload URL presigned per storage S3/MinIO compatibile con scadenza a 5 minuti e quota utente (max 25MB per file, 1GB per utente).
+  - Validazione estensioni e tipi MIME ammessi (PDF, PNG, JPG, WEBP, DOCX, PPTX).
+  - Hook per scansione antivirus (ClamAV) con stati `PENDING`, `CLEAN`, `INFECTED`.
+  - Download URL sicuri con header `Content-Disposition: attachment` e URL di anteprima inline nel browser.
+  - Pulizia e cancellazione programmata per file orfani non referenziati.
+- **Modulo Appunti Condivisi (`/shared-notes`)**:
+  - Ricerca multi-fattoriale con filtri per materia, classe, anno di corso, tag, tipologia (`FILE` / `MARKDOWN`), badge docente e ordinamento (recenti, valutazione, download, visualizzazioni).
+  - Scoping visibilità e isolamento privacy rigoroso: appunti `PRIVATE` inaccessibili anche a docenti o compagni; appunti `CLASS`, `GRADE_LEVEL` e `SCHOOL` visibili esclusivamente al perimetro autorizzato.
+  - Calcolo del rating con media bayesiana ponderata: $(C \cdot m + \sum)/(C + n)$ con $C=5, m=3.5$.
+  - Gestione segnalibri / appunti salvati (`/bookmark`).
+  - Commenti con discussioni annidate a 1 livello e finestra di modifica di 10 minuti per l'autore.
+  - Soglia di auto-moderazione: oscuramento automatico (`status: HIDDEN`) al raggiungimento di 3 segnalazioni distinte da parte di utenti.
+  - Badge di verifica e approvazione docente (`/verify`) con tracciamento del docente e data verifica.
+- **Modulo Moderazione (`/moderation`)**:
+  - Elenco segnalazioni aperte con motivazione (`COPYRIGHT`, `INAPPROPRIATO`, `ERRATO`, `SPAM`).
+  - Risoluzione segnalazioni con azioni: archiviazione (ignora), oscuramento appunto (`HIDDEN`) o eliminazione definitiva (`REMOVED`).
+- **Interfaccia Web Appunti Condivisi (`apps/web`)**:
+  - Catalogo esplorativo `/appunti` con filtri dinamici, barra di ricerca e card interattive con valutazione a stelle e contatori download/visite.
+  - Wizard di creazione `/appunti/nuovo` con tab per upload file con presigned URL o editor Markdown con anteprima split-screen in tempo reale e supporto formule matematiche LaTeX/KaTeX (`$formula$` e `$$formula$$`).
+  - Pagina di dettaglio `/appunti/[id]` con visualizzatore integrato, valutazione interattiva da 1 a 5 stelle, salvataggio nei preferiti, modale di segnalazione contenuti, approvazione docente e discussione commentata con modifica a tempo.
+  - Cruscotto personale `/appunti/miei` per gestione delle proprie bozze, dispense pubblicate e appunti salvati.
+  - Pannello moderazione docente `/docente/moderazione` per revisione e gestione rapida delle segnalazioni della scuola.
+  - Componente autonomo e performante `MarkdownViewer` per rendering sicuro di testi formattati, blocchi di codice e formule matematiche in linea e a blocco.
+  - Integrazione voce "Appunti" nelle barre di navigazione di studenti (`StudentNav`) e docenti (`TeacherLayout`).
+
 ## [0.3.0] - 2026-10-12
 
 ### Aggiunto

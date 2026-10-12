@@ -59,6 +59,14 @@ export function DialogDescription({ className, children, ...props }: React.HTMLA
   );
 }
 
+export function DialogContent({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div className={cn('space-y-4', className)} {...props}>
+      {children}
+    </div>
+  );
+}
+
 export function DialogFooter({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-6 gap-2', className)} {...props}>

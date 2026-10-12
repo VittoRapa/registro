@@ -24,6 +24,9 @@ import { HomeworkModule } from './modules/homework/homework.module';
 import { AgendaModule } from './modules/agenda/agenda.module';
 import { DisciplinaryNotesModule } from './modules/disciplinary-notes/disciplinary-notes.module';
 import { AnnouncementsModule } from './modules/announcements/announcements.module';
+import { FilesModule } from './modules/files/files.module';
+import { SharedNotesModule } from './modules/shared-notes/shared-notes.module';
+import { ModerationModule } from './modules/moderation/moderation.module';
 import { TenantMiddleware } from './common/tenant/tenant.middleware';
 
 @Module({
@@ -68,6 +71,9 @@ import { TenantMiddleware } from './common/tenant/tenant.middleware';
     AgendaModule,
     DisciplinaryNotesModule,
     AnnouncementsModule,
+    FilesModule,
+    SharedNotesModule,
+    ModerationModule,
     HealthModule,
   ],
 })
