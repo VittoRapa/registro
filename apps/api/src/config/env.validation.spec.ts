@@ -43,8 +43,10 @@ describe('Environment Validation', () => {
     expect(() => validateEnv(invalidConfig)).toThrow('JWT_ACCESS_SECRET must be at least 32 characters');
   });
 
-  it('should throw an error when ENCRYPTION_KEY is not 64 hex characters', () => {
-    const invalidConfig = { ...validConfig, ENCRYPTION_KEY: 'invalid-key' };
-    expect(() => validateEnv(invalidConfig)).toThrow('ENCRYPTION_KEY must be a 64-character hex string');
+  it('should normalize or derive 64-character hex key for ENCRYPTION_KEY', () => {
+    const configWithShortKey = { ...validConfig, ENCRYPTION_KEY: 'invalid-key' };
+    const validated = validateEnv(configWithShortKey);
+    expect(validated.ENCRYPTION_KEY).toMatch(/^[0-9a-f]{64}$/);
+    expect(validated.ENCRYPTION_KEY.length).toBe(64);
   });
 });

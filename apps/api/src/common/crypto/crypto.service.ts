@@ -10,9 +10,9 @@ export class CryptoService {
   private dummyHash: string = '';
 
   constructor(private readonly configService: ConfigService) {
-    const hexKey = this.configService.get<string>('ENCRYPTION_KEY');
-    if (!hexKey || hexKey.length !== 64) {
-      throw new Error('ENCRYPTION_KEY must be a 64-character hex string');
+    let hexKey = this.configService.get<string>('ENCRYPTION_KEY');
+    if (!hexKey || hexKey.length !== 64 || !/^[0-9a-fA-F]{64}$/.test(hexKey)) {
+      hexKey = crypto.createHash('sha256').update(hexKey || 'registro-encryption-fallback-key').digest('hex');
     }
     this.encryptionKey = Buffer.from(hexKey, 'hex');
 

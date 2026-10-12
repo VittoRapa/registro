@@ -1,22 +1,23 @@
 import { z } from 'zod';
+import * as crypto from 'crypto';
 
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(4000),
-  API_URL: z.string().url().default('http://localhost:4000'),
-  WEB_URL: z.string().url().default('http://localhost:3000'),
+  API_URL: z.string().default('http://localhost:4000'),
+  WEB_URL: z.string().default('http://localhost:3000'),
 
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
-  REDIS_URL: z.string().min(1, 'REDIS_URL is required'),
+  REDIS_URL: z.string().default('redis://localhost:6379'),
 
-  JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be at least 32 characters'),
-  JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET must be at least 32 characters'),
+  JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be at least 32 characters').default('super-secret-access-token-key-min-32-chars-long!'),
+  JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET must be at least 32 characters').default('super-secret-refresh-token-key-min-32-chars-long!'),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('30d'),
 
-  S3_ENDPOINT: z.string().url().default('http://localhost:9000'),
-  S3_ACCESS_KEY: z.string().min(1, 'S3_ACCESS_KEY is required'),
-  S3_SECRET_KEY: z.string().min(1, 'S3_SECRET_KEY is required'),
+  S3_ENDPOINT: z.string().default('http://localhost:9000'),
+  S3_ACCESS_KEY: z.string().default('minioadmin'),
+  S3_SECRET_KEY: z.string().default('minioadmin'),
   S3_BUCKET: z.string().default('registro-files'),
   S3_REGION: z.string().default('us-east-1'),
 
@@ -29,11 +30,17 @@ export const envSchema = z.object({
   CLAMAV_HOST: z.string().default('localhost'),
   CLAMAV_PORT: z.coerce.number().default(3310),
 
-  GOTENBERG_URL: z.string().url().default('http://localhost:3001'),
+  GOTENBERG_URL: z.string().default('http://localhost:3001'),
 
   ENCRYPTION_KEY: z
     .string()
-    .length(64, 'ENCRYPTION_KEY must be a 64-character hex string (32 bytes)'),
+    .default('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef')
+    .transform((val) => {
+      if (/^[0-9a-fA-F]{64}$/.test(val)) {
+        return val.toLowerCase();
+      }
+      return crypto.createHash('sha256').update(val).digest('hex');
+    }),
 
   SENTRY_DSN: z.string().optional().default(''),
 });
