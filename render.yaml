@@ -16,7 +16,7 @@ services:
     runtime: node
     plan: free
     region: frankfurt
-    buildCommand: pnpm install && pnpm --filter @registro/api prisma:generate && pnpm --filter @registro/api build
+    buildCommand: pnpm install --prod=false && pnpm --filter @registro/api prisma:generate && pnpm --filter @registro/api build
     preDeployCommand: pnpm --filter @registro/api prisma:push --skip-generate
     startCommand: node apps/api/dist/main.js
     healthCheckPath: /api/v1/health

@@ -17,7 +17,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "clean": "turbo run clean && rimraf node_modules",
-    "prepare": "husky"
+    "prepare": "node -e \"try { if (process.env.NODE_ENV !== 'production' && !process.env.CI) import('husky').then(h => h.default()) } catch {}\""
   },
   "devDependencies": {
     "@commitlint/cli": "^19.7.1",
