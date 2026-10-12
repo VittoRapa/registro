@@ -16,6 +16,8 @@ import {
   LayoutDashboard,
   ShieldCheck,
   Lock,
+  Users,
+  MessageSquare,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
 import { Role } from '@registro/shared';
@@ -41,6 +43,8 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
     { label: 'Compiti', href: '/docente/compiti', icon: BookOpen },
     { label: 'Agenda & Verifiche', href: '/docente/agenda', icon: Calendar },
     { label: 'Note Disciplinari', href: '/docente/note', icon: AlertTriangle },
+    { label: 'Colloqui', href: '/colloqui', icon: Users },
+    { label: 'Messaggi', href: '/messaggi', icon: MessageSquare },
     { label: 'Comunicazioni', href: '/docente/comunicazioni', icon: Bell },
     { label: 'Appunti', href: '/appunti', icon: FileText },
     { label: 'Moderazione', href: '/docente/moderazione', icon: ShieldAlert },

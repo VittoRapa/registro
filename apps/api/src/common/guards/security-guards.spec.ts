@@ -18,6 +18,11 @@ import { AnnouncementsController } from '../../modules/announcements/announcemen
 import { FilesController } from '../../modules/files/files.controller';
 import { SharedNotesController } from '../../modules/shared-notes/shared-notes.controller';
 import { ModerationController } from '../../modules/moderation/moderation.controller';
+import { MessagingController } from '../../modules/messaging/messaging.controller';
+import { MeetingsController } from '../../modules/meetings/meetings.controller';
+import { NotificationsController } from '../../modules/notifications/notifications.controller';
+import { EventsController } from '../../modules/events/events.controller';
+import { CalendarController } from '../../modules/calendar/calendar.controller';
 import { GUARDS_METADATA } from '@nestjs/common/constants';
 
 describe('Security & Guard Coverage', () => {
@@ -40,6 +45,11 @@ describe('Security & Guard Coverage', () => {
     FilesController,
     SharedNotesController,
     ModerationController,
+    MessagingController,
+    MeetingsController,
+    NotificationsController,
+    EventsController,
+    CalendarController,
   ];
 
   it('all administrative controllers have guards applied at class level', () => {

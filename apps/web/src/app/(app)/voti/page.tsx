@@ -12,6 +12,7 @@ import {
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { StudentNav } from '@/components/navigation/student-nav';
+import { GradeSimulator } from '@/components/grades/grade-simulator';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   Table,
@@ -291,6 +292,14 @@ export default function StudentGradesPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Grade Target Simulator */}
+        <div className="mt-8">
+          <GradeSimulator
+            initialAverage={summary?.overall.weightedAverage || 6.0}
+            initialCount={summary?.overall.gradesCount || gradesList.length || 4}
+          />
+        </div>
       </main>
     </div>
   );

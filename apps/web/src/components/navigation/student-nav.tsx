@@ -12,6 +12,8 @@ import {
   FileText,
   LogOut,
   ShieldCheck,
+  MessageSquare,
+  Users,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
 import { Button } from '@/components/ui/button';
@@ -28,6 +30,8 @@ export function StudentNav() {
     { label: 'Compiti', href: '/compiti', icon: BookOpen },
     { label: 'Orario', href: '/orario', icon: Calendar },
     { label: 'Appunti', href: '/appunti', icon: FileText },
+    { label: 'Colloqui', href: '/colloqui', icon: Users },
+    { label: 'Messaggi', href: '/messaggi', icon: MessageSquare },
     { label: 'Circolari', href: '/comunicazioni', icon: Bell },
   ];
 

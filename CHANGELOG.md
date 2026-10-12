@@ -5,6 +5,34 @@ Tutte le modifiche rilevanti a questo progetto saranno documentate in questo fil
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/)
 e questo progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.5.0] - 2026-10-12
+
+### Aggiunto
+- **Modulo Messaggistica Interna Sicura (`/conversations`, `/messages`)**:
+  - Canale di comunicazione conforme alle linee guida di tutela e riservatezza minori (Spec 8.6): docenti abilitati a comunicare con studenti e genitori delle proprie classi; studenti con i rispettivi docenti; audit trail permanente per la dirigenza scolastica.
+  - Filtro automatico e preventivo del linguaggio con blacklist termini inappropriati (`BadRequestException`).
+  - Marcatura automatica lettura messaggi e cancellazione logica (soft-delete) con mascheramento testo per preservare integrità legale dell'audit.
+- **Modulo Colloqui e Ricevimento Famiglie (`/meetings`)**:
+  - Gestione disponibilità docenti (`/meetings/slots`): definizione giorno, orari, capienza massima, modalità (`PRESENZA` o `ONLINE`) e link videocall (Meet/Teams).
+  - Prenotazione colloquio genitore (`/meetings/bookings`): vincolo di appartenenza genitore-studente verificato (`ParentLink`), controllo capienza e gestione note.
+  - Ciclo di vita appuntamenti con stati `BOOKED`, `CANCELLED` e `COMPLETED`.
+- **Modulo Notifiche & Real-time Server-Sent Events (SSE)**:
+  - Sistema notifiche in-app (`/notifications`) con preferenze granulari per canale (`inApp`, `email`, `push`).
+  - Endpoint SSE real-time (`/events`) per trasmissione istantanea eventi ai client con heartbeat di keep-alive a 25 secondi.
+- **Modulo Sincronizzazione Calendario iCal (`/calendar`)**:
+  - Feed iCalendar conforme standard RFC 5545 (`/calendar/feed.ics`) per sincronizzazione esterna di lezioni, verifiche e colloqui con Google Calendar, Apple Calendar e Outlook.
+- **Interfaccia Web, PWA e User Experience (`apps/web`)**:
+  - Command Palette globale accessibile con scorciatoia `Ctrl+K` / `Cmd+K` (`CommandMenu`) per navigazione istantanea tra le pagine dell'applicazione e ricerca rapida.
+  - Simulatore Obiettivo Voti (`GradeSimulator`): strumento di pianificazione scolastica per studenti e famiglie basato su calcolo matematico ponderato inverso del voto minimo richiesto nella prossima prova, con segnalazione di traguardi non realistici (>10) o già conseguiti.
+  - Pagina Messaggistica `/messaggi`: interfaccia a due colonne per selezione conversazioni, visualizzazione messaggi in tempo reale e invio comunicazioni sicure.
+  - Pagina Colloqui `/colloqui`: dashboard interattiva con vista docente (creazione disponibilità, presenze) e vista genitore (elenco slot, prenotazione, disdetta).
+  - Supporto Progressive Web App (PWA) con manifest `manifest.json`, tema smeraldo `#059669` e configurazione display `standalone`.
+  - Aggiornamento barre di navigazione `StudentNav` e `TeacherLayout` con accessi diretti a Colloqui e Messaggi.
+- **Test Suite & Quality Gate**:
+  - 55 test unitari per `@registro/api` inclusi test specifici su regole 8.6 di messaggistica e capienza colloqui.
+  - 14 test unitari per `@registro/shared`.
+  - 69 test unitari monorepo 100% superati, zero warning ESLint e 32 route statiche/dinamiche compilate per il rilascio.
+
 ## [0.4.0] - 2026-10-12
 
 ### Aggiunto

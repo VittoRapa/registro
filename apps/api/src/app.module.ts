@@ -27,6 +27,11 @@ import { AnnouncementsModule } from './modules/announcements/announcements.modul
 import { FilesModule } from './modules/files/files.module';
 import { SharedNotesModule } from './modules/shared-notes/shared-notes.module';
 import { ModerationModule } from './modules/moderation/moderation.module';
+import { MessagingModule } from './modules/messaging/messaging.module';
+import { MeetingsModule } from './modules/meetings/meetings.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { EventsModule } from './modules/events/events.module';
+import { CalendarModule } from './modules/calendar/calendar.module';
 import { TenantMiddleware } from './common/tenant/tenant.middleware';
 
 @Module({
@@ -74,6 +79,11 @@ import { TenantMiddleware } from './common/tenant/tenant.middleware';
     FilesModule,
     SharedNotesModule,
     ModerationModule,
+    MessagingModule,
+    MeetingsModule,
+    NotificationsModule,
+    EventsModule,
+    CalendarModule,
     HealthModule,
   ],
 })
