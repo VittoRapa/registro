@@ -19,6 +19,9 @@
     "clean": "turbo run clean && rimraf node_modules",
     "prepare": "node -e \"try { if (process.env.NODE_ENV !== 'production' && !process.env.CI) import('husky').then(h => h.default()) } catch {}\""
   },
+  "dependencies": {
+    "prisma": "^6.3.1"
+  },
   "devDependencies": {
     "@commitlint/cli": "^19.7.1",
     "@commitlint/config-conventional": "^19.7.1",
