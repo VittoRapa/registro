@@ -1,3 +1,4 @@
+import { execSync } from 'child_process';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -6,11 +7,42 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { PrismaService } from './prisma/prisma.service';
+import { runAutoSeed } from './prisma/seed.runner';
 
 async function bootstrap(): Promise<void> {
+  // Sincronizzazione automatica schema Prisma su cloud senza shell interattiva (es. Render Free)
+  if (process.env.DATABASE_URL) {
+    try {
+      console.log('🔄 Sincronizzazione automatica schema database (prisma db push)...');
+      execSync('npx prisma db push --skip-generate --accept-data-loss', {
+        stdio: 'inherit',
+        env: process.env,
+      });
+      console.log('✅ Schema database sincronizzato con successo.');
+    } catch (err) {
+      console.warn('⚠️ Nota sincronizzazione schema database:', err);
+    }
+  }
+
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
   });
+
+  // Seeding automatico al primo avvio se il database non contiene ancora utenti
+  try {
+    const prisma = app.get(PrismaService);
+    const userCount = await prisma.user.count().catch(() => 0);
+    if (userCount === 0) {
+      console.log('🌱 Database vuoto rilevato! Avvio popolazione automatica 8 profili demo...');
+      await runAutoSeed(prisma);
+      console.log('✅ Seeding automatico completato con successo!');
+    } else {
+      console.log(`ℹ️ Database operativo con ${userCount} utenti registrati.`);
+    }
+  } catch (err) {
+    console.warn('⚠️ Nota verifica seeding automatico:', err);
+  }
 
   // Use pino logger
   const logger = app.get(Logger);
