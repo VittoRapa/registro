@@ -1,4 +1,4 @@
-import { PrismaClient, Role, UserStatus, SchoolStatus, EnrollmentStatus } from '@prisma/client';
+import { PrismaClient, Role, UserStatus, SchoolStatus, EnrollmentStatus, NoteVisibility, NoteStatus, MeetingMode } from '@prisma/client';
 import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
@@ -19,32 +19,34 @@ async function main() {
   const superAdminPasswordHash = await hashPassword('SuperAdmin2026!#');
 
   // 1. Super Admin
-  const superAdmin = await prisma.user.upsert({
-    where: { username: 'superadmin' },
-    update: {},
-    create: {
-      username: 'superadmin',
-      email: 'superadmin@registro.it',
-      firstName: 'Super',
-      lastName: 'Administrator',
-      role: Role.SUPER_ADMIN,
-      status: UserStatus.ACTIVE,
-      passwordHash: superAdminPasswordHash,
-      mustChangePassword: false,
-    },
+  let superAdmin = await prisma.user.findFirst({
+    where: { username: 'superadmin', role: Role.SUPER_ADMIN },
   });
-  console.log(`✓ SuperAdmin creato: ${superAdmin.username}`);
+  if (!superAdmin) {
+    superAdmin = await prisma.user.create({
+      data: {
+        username: 'superadmin',
+        email: 'superadmin@registro.it',
+        firstName: 'Super',
+        lastName: 'Administrator',
+        role: Role.SUPER_ADMIN,
+        status: UserStatus.ACTIVE,
+        passwordHash: superAdminPasswordHash,
+        mustChangePassword: false,
+      },
+    });
+  }
+  console.log(`✓ SuperAdmin pronto: ${superAdmin.username}`);
 
   // 2. Scuola (Tenant)
   const school = await prisma.school.upsert({
-    where: { code: 'RMIS00100X' },
+    where: { slug: 'liceo-da-vinci' },
     update: {},
     create: {
       name: 'Liceo Scientifico Leonardo da Vinci',
       code: 'RMIS00100X',
+      slug: 'liceo-da-vinci',
       status: SchoolStatus.ACTIVE,
-      plan: 'ENTERPRISE',
-      academicCycle: 'SUPERIORE',
       settings: {
         gradingSystem: 'DECIMALS',
         minGrade: 1,
@@ -57,7 +59,12 @@ async function main() {
 
   // 3. School Admin
   const schoolAdmin = await prisma.user.upsert({
-    where: { username: 'admin.davinci' },
+    where: {
+      schoolId_username: {
+        schoolId: school.id,
+        username: 'admin.davinci',
+      },
+    },
     update: {},
     create: {
       schoolId: school.id,
@@ -87,7 +94,7 @@ async function main() {
       name: '2025/2026',
       startDate: new Date('2025-09-01'),
       endDate: new Date('2026-06-30'),
-      isActive: true,
+      isCurrent: true,
       terms: {
         create: [
           {
@@ -110,27 +117,27 @@ async function main() {
 
   // 5. Materie
   const subjectsData = [
-    { name: 'Matematica', code: 'MAT', color: '#3B82F6' },
-    { name: 'Italiano', code: 'ITA', color: '#10B981' },
-    { name: 'Fisica', code: 'FIS', color: '#8B5CF6' },
-    { name: 'Storia e Filosofia', code: 'STO-FIL', color: '#F59E0B' },
-    { name: 'Lingua Inglese', code: 'ING', color: '#EC4899' },
+    { name: 'Matematica', shortName: 'MAT', color: '#3B82F6' },
+    { name: 'Italiano', shortName: 'ITA', color: '#10B981' },
+    { name: 'Fisica', shortName: 'FIS', color: '#8B5CF6' },
+    { name: 'Storia e Filosofia', shortName: 'STO-FIL', color: '#F59E0B' },
+    { name: 'Lingua Inglese', shortName: 'ING', color: '#EC4899' },
   ];
 
   const subjects = [];
   for (const s of subjectsData) {
     const subject = await prisma.subject.upsert({
       where: {
-        schoolId_code: {
+        schoolId_name: {
           schoolId: school.id,
-          code: s.code,
+          name: s.name,
         },
       },
       update: {},
       create: {
         schoolId: school.id,
         name: s.name,
-        code: s.code,
+        shortName: s.shortName,
         color: s.color,
       },
     });
@@ -140,28 +147,27 @@ async function main() {
 
   // 6. Classi
   const classesData = [
-    { year: 1, section: 'A' },
-    { year: 2, section: 'A' },
-    { year: 3, section: 'A' },
+    { name: '1A', grade: 1, section: 'A' },
+    { name: '2A', grade: 2, section: 'A' },
+    { name: '3A', grade: 3, section: 'A' },
   ];
 
   const classes = [];
   for (const c of classesData) {
     const cls = await prisma.class.upsert({
       where: {
-        schoolId_year_section_academicYearId: {
+        schoolId_academicYearId_name: {
           schoolId: school.id,
           academicYearId: academicYear.id,
-          year: c.year,
-          section: c.section,
+          name: c.name,
         },
       },
       update: {},
       create: {
         schoolId: school.id,
         academicYearId: academicYear.id,
-        name: `${c.year}${c.section}`,
-        year: c.year,
+        name: c.name,
+        grade: c.grade,
         section: c.section,
       },
     });
@@ -171,130 +177,146 @@ async function main() {
 
   // 7. Docenti (8 docenti)
   const teachersData = [
-    { firstName: 'Mario', lastName: 'Bianchi', subjectCode: 'MAT' },
-    { firstName: 'Lucia', lastName: 'Verdi', subjectCode: 'ITA' },
-    { firstName: 'Giuseppe', lastName: 'Ferrari', subjectCode: 'FIS' },
-    { firstName: 'Anna', lastName: 'Esposito', subjectCode: 'STO-FIL' },
-    { firstName: 'Roberto', lastName: 'Romano', subjectCode: 'ING' },
-    { firstName: 'Elena', lastName: 'Colombo', subjectCode: 'MAT' },
-    { firstName: 'Antonio', lastName: 'Ricci', subjectCode: 'ITA' },
-    { firstName: 'Federica', lastName: 'Marino', subjectCode: 'FIS' },
+    { firstName: 'Mario', lastName: 'Bianchi', subjectIdx: 0 },
+    { firstName: 'Lucia', lastName: 'Verdi', subjectIdx: 1 },
+    { firstName: 'Giuseppe', lastName: 'Ferrari', subjectIdx: 2 },
+    { firstName: 'Anna', lastName: 'Esposito', subjectIdx: 3 },
+    { firstName: 'Roberto', lastName: 'Romano', subjectIdx: 4 },
   ];
 
   for (let i = 0; i < teachersData.length; i++) {
     const t = teachersData[i];
+    if (!t) continue;
     const username = `docente.${t.lastName.toLowerCase()}${i}`;
     const email = `${username}@liceodavinci.edu.it`;
     const employeeCode = `DOC-${1000 + i}`;
 
-    const teacherUser = await prisma.user.upsert({
-      where: { username },
-      update: {},
-      create: {
-        schoolId: school.id,
-        username,
-        email,
-        firstName: t.firstName,
-        lastName: t.lastName,
-        role: Role.TEACHER,
-        status: UserStatus.ACTIVE,
-        passwordHash: defaultPasswordHash,
-        mustChangePassword: false,
-        teacherProfile: {
-          create: {
-            employeeCode,
-          },
-        },
-      },
+    let teacherUser = await prisma.user.findFirst({
+      where: { schoolId: school.id, username },
       include: { teacherProfile: true },
     });
 
-    // Assign to a class and subject
-    const subject = subjects.find((s) => s.code === t.subjectCode) || subjects[0];
-    const assignedClass = classes[i % classes.length];
-
-    if (teacherUser.teacherProfile) {
-      await prisma.teachingAssignment.upsert({
-        where: {
-          teacherProfileId_classId_subjectId: {
-            teacherProfileId: teacherUser.teacherProfile.id,
-            classId: assignedClass.id,
-            subjectId: subject.id,
+    if (!teacherUser) {
+      teacherUser = await prisma.user.create({
+        data: {
+          schoolId: school.id,
+          username,
+          email,
+          firstName: t.firstName,
+          lastName: t.lastName,
+          role: Role.TEACHER,
+          status: UserStatus.ACTIVE,
+          passwordHash: defaultPasswordHash,
+          mustChangePassword: false,
+          teacherProfile: {
+            create: {
+              employeeCode,
+            },
           },
         },
-        update: {},
-        create: {
+        include: { teacherProfile: true },
+      });
+    }
+
+    const assignedSubject = subjects[t.subjectIdx] || subjects[0];
+    const assignedClass = classes[i % classes.length] || classes[0];
+
+    if (teacherUser.teacherProfile && assignedClass && assignedSubject) {
+      const existingAssignment = await prisma.teachingAssignment.findFirst({
+        where: {
+          academicYearId: academicYear.id,
           teacherProfileId: teacherUser.teacherProfile.id,
           classId: assignedClass.id,
-          subjectId: subject.id,
+          subjectId: assignedSubject.id,
         },
       });
+
+      if (!existingAssignment) {
+        await prisma.teachingAssignment.create({
+          data: {
+            academicYearId: academicYear.id,
+            teacherProfileId: teacherUser.teacherProfile.id,
+            classId: assignedClass.id,
+            subjectId: assignedSubject.id,
+          },
+        });
+      }
     }
   }
   console.log(`✓ Docenti e cattedre creati: ${teachersData.length}`);
 
-  // 8. Studenti (60 studenti - 20 per classe)
+  // 8. Studenti (20 per classe)
   let studentCount = 0;
   for (let cIdx = 0; cIdx < classes.length; cIdx++) {
     const currentClass = classes[cIdx];
-    for (let sIdx = 1; sIdx <= 20; sIdx++) {
+    if (!currentClass) continue;
+
+    for (let sIdx = 1; sIdx <= 15; sIdx++) {
       studentCount++;
       const matricola = `2025${studentCount.toString().padStart(4, '0')}`;
       const username = `studente.${matricola}`;
       const email = `${username}@liceodavinci.edu.it`;
 
-      const studentUser = await prisma.user.upsert({
-        where: { username },
-        update: {},
-        create: {
-          schoolId: school.id,
-          username,
-          email,
-          firstName: `Studente${studentCount}`,
-          lastName: `Cognome${cIdx + 1}`,
-          role: Role.STUDENT,
-          status: UserStatus.ACTIVE,
-          passwordHash: defaultPasswordHash,
-          mustChangePassword: false,
-          studentProfile: {
-            create: {
-              matricola,
-              enrollments: {
-                create: {
-                  classId: currentClass.id,
-                  status: EnrollmentStatus.ACTIVE,
+      const existingStudent = await prisma.user.findFirst({
+        where: { schoolId: school.id, username },
+      });
+
+      if (!existingStudent) {
+        await prisma.user.create({
+          data: {
+            schoolId: school.id,
+            username,
+            email,
+            firstName: `Studente${studentCount}`,
+            lastName: `Cognome${cIdx + 1}`,
+            role: Role.STUDENT,
+            status: UserStatus.ACTIVE,
+            passwordHash: defaultPasswordHash,
+            mustChangePassword: false,
+            studentProfile: {
+              create: {
+                matricola,
+                enrollments: {
+                  create: {
+                    classId: currentClass.id,
+                    status: EnrollmentStatus.ACTIVE,
+                  },
                 },
               },
             },
           },
-        },
-      });
+        });
+      }
     }
   }
   console.log(`✓ Studenti creati e iscritti alle classi: ${studentCount}`);
 
-  // 9. Genitore associato al primo studente
+  // 9. Genitore collegato a studente 20250001
   const firstStudent = await prisma.studentProfile.findFirst({
     where: { matricola: '20250001' },
     include: { user: true },
   });
 
   if (firstStudent) {
-    const parentUser = await prisma.user.upsert({
-      where: { username: 'genitore.rossi' },
-      update: {},
-      create: {
-        schoolId: school.id,
-        username: 'genitore.rossi',
-        email: 'genitore.rossi@famiglia.it',
-        firstName: 'Giuseppe',
-        lastName: 'Rossi',
-        role: Role.PARENT,
-        status: UserStatus.ACTIVE,
-        passwordHash: defaultPasswordHash,
-        mustChangePassword: false,
-      },
+    let parentUser = await prisma.user.findFirst({
+      where: { schoolId: school.id, username: 'genitore.rossi' },
     });
+
+    if (!parentUser) {
+      parentUser = await prisma.user.create({
+        data: {
+          schoolId: school.id,
+          username: 'genitore.rossi',
+          email: 'genitore.rossi@famiglia.it',
+          firstName: 'Giuseppe',
+          lastName: 'Rossi',
+          role: Role.PARENT,
+          status: UserStatus.ACTIVE,
+          passwordHash: defaultPasswordHash,
+          mustChangePassword: false,
+        },
+      });
+    }
 
     await prisma.parentLink.upsert({
       where: {
@@ -312,7 +334,7 @@ async function main() {
     console.log(`✓ Genitore collegato a studente 20250001: ${parentUser.username}`);
   }
 
-  // 10. Docente demo e slot colloqui
+  // 10. Docente slot disponibilità colloqui
   const teacherBianchi = await prisma.user.findFirst({
     where: { username: 'docente.bianchi0' },
   });
@@ -331,7 +353,7 @@ async function main() {
         startAt: tomorrow,
         endAt: tomorrowEnd,
         capacity: 3,
-        mode: 'PRESENZA',
+        mode: MeetingMode.PRESENZA,
       },
     });
     console.log('✓ Slot colloqui docente creato');
@@ -351,13 +373,13 @@ async function main() {
         authorId: authorStudent.id,
         subjectId: mathSubject.id,
         classId: class1A.id,
-        gradeLevel: 1,
+        grade: 1,
         title: 'Studio dei Limiti Notevoli e Derivate',
         description: 'Dispensa riassuntiva completa con formule dimostrate in KaTeX e grafici',
-        type: 'MARKDOWN',
-        visibility: 'SCHOOL',
-        status: 'PUBLISHED',
-        markdownContent: `# Studio dei Limiti Notevoli e Derivate
+        contentType: 'MARKDOWN',
+        visibility: NoteVisibility.SCHOOL,
+        status: NoteStatus.PUBLISHED,
+        markdownBody: `# Studio dei Limiti Notevoli e Derivate
 
 Ecco il riassunto completo delle formule fondamentali per la verifica:
 

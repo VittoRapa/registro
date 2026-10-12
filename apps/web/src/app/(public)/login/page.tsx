@@ -62,9 +62,10 @@ export default function LoginPage() {
         const res = await apiClient<LoginSuccessResponse>('/auth/login', {
           method: 'POST',
           body: JSON.stringify({
+            identifier: username.trim(),
             username: username.trim(),
             password,
-            totpCode: totpCode.trim(),
+            totp: totpCode.trim(),
           }),
         });
 
@@ -75,6 +76,7 @@ export default function LoginPage() {
         const res = await apiClient<LoginApiResponse>('/auth/login', {
           method: 'POST',
           body: JSON.stringify({
+            identifier: username.trim(),
             username: username.trim(),
             password,
           }),

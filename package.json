@@ -10,6 +10,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "db:start": "node scripts/db-server.js",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
@@ -24,6 +25,7 @@
     "@eslint/js": "^9.20.0",
     "@typescript-eslint/eslint-plugin": "^8.24.0",
     "@typescript-eslint/parser": "^8.24.0",
+    "embedded-postgres": "18.4.0-beta.17",
     "eslint": "^9.20.1",
     "husky": "^9.1.7",
     "lint-staged": "^15.4.3",

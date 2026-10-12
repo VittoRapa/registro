@@ -21,6 +21,8 @@ out
 # Prisma
 *.db
 *.db-journal
+.postgres-data
+data
 
 # Logs
 logs

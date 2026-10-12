@@ -10,11 +10,23 @@ export const passwordSchema = z
   .regex(/[0-9]/, 'La password deve contenere almeno un numero')
   .regex(/[^A-Za-z0-9]/, 'La password deve contenere almeno un carattere speciale');
 
-export const loginSchema = z.object({
-  identifier: z.string().trim().min(1, 'Username o email obbligatorio'),
-  password: z.string().min(1, 'La password è obbligatoria'),
-  totp: z.string().length(6, 'Il codice 2FA deve contenere 6 cifre').optional(),
-});
+export const loginSchema = z
+  .object({
+    identifier: z.string().trim().optional(),
+    username: z.string().trim().optional(),
+    password: z.string().min(1, 'La password è obbligatoria'),
+    totp: z.string().length(6, 'Il codice 2FA deve contenere 6 cifre').optional(),
+    totpCode: z.string().length(6, 'Il codice 2FA deve contenere 6 cifre').optional(),
+  })
+  .transform((data) => ({
+    identifier: (data.identifier || data.username || '').trim(),
+    password: data.password,
+    totp: data.totp || data.totpCode,
+  }))
+  .refine((data) => data.identifier.length > 0, {
+    message: 'Username o email obbligatorio',
+    path: ['identifier'],
+  });
 
 export type LoginDto = z.infer<typeof loginSchema>;
 

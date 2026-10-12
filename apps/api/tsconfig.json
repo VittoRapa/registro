@@ -1,6 +1,7 @@
 {
   "extends": "@registro/config/tsconfig/nestjs.json",
   "compilerOptions": {
+    "baseUrl": "./",
     "outDir": "./dist",
     "rootDir": "./src"
   },
