@@ -8,11 +8,13 @@ import {
   TrendingUp,
   Award,
   Loader2,
+  FileDown,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { StudentNav } from '@/components/navigation/student-nav';
 import { GradeSimulator } from '@/components/grades/grade-simulator';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   Table,
@@ -22,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { toast } from 'sonner';
 
 interface UserProfile {
   id: string;
@@ -113,6 +116,45 @@ export default function StudentGradesPage() {
     gradesBySubject[sName].push(g);
   });
 
+  const [downloadingReport, setDownloadingReport] = useState(false);
+
+  const handleDownloadReportCard = async () => {
+    if (!studentProfileId) {
+      toast.error('Profilo studente non trovato');
+      return;
+    }
+    setDownloadingReport(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+      const res = await fetch(`${apiUrl}/reports/report-card/${studentProfileId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error('Impossibile generare la pagella');
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `pagella_${studentProfileId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      toast.success('Pagella scolastica generata e scaricata con successo!');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Errore download pagella';
+      toast.error(msg);
+    } finally {
+      setDownloadingReport(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50">
       <StudentNav />
@@ -131,10 +173,25 @@ export default function StudentGradesPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadReportCard}
+              disabled={downloadingReport || !studentProfileId}
+              className="gap-1.5 border-slate-300 dark:border-slate-700"
+            >
+              {downloadingReport ? (
+                <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
+              ) : (
+                <FileDown className="h-4 w-4 text-emerald-600" />
+              )}
+              Scarica Pagella (PDF)
+            </Button>
+
             <select
               value={selectedTerm}
               onChange={(e) => setSelectedTerm(e.target.value)}
-              className="h-10 px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md shadow-sm"
+              className="h-9 px-3 py-1 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md shadow-xs"
             >
               <option value="ALL">Anno Intero</option>
               <option value="Q1">1° Quadrimestre</option>

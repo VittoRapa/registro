@@ -5,6 +5,28 @@ Tutte le modifiche rilevanti a questo progetto saranno documentate in questo fil
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/)
 e questo progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.8.0] - 2026-10-12
+
+### Aggiunto
+- **Generazione Documenti Ufficiali e Pagelle Scolastiche in PDF (Spec 18.6 / Spec 13)**:
+  - Modulo NestJS `ReportsModule`, `ReportsService`, `ReportsController`:
+    - `GET /api/v1/reports/report-card/:studentId`: Generazione in tempo reale della Scheda di Valutazione Periodica Ufficiale (Pagella PDF) con intestazione della Repubblica Italiana e del Ministero, dati anagrafici studente con mascheramento codice fiscale, tabella delle valutazioni disciplinari con medie ponderate, statistiche presenze/assenze, firma del Dirigente Scolastico e timbro digitale ai sensi dell'art. 21 CAD.
+    - `GET /api/v1/reports/class-board/:classId`: Generazione del Tabellone dei Voti di Classe in formato PDF orizzontale (Landscape) con matrice studenti per materie, medie individuali e media di classe.
+    - Controlli di sicurezza rigorosi RBAC/ABAC: download consentito solo allo studente interessato, ai genitori con relazione certificata (`ParentLink`) e ai docenti assegnatari della classe.
+  - Interfaccia Web `/voti` (`apps/web`):
+    - Pulsante dedicato "Scarica Pagella (PDF)" con icona di download ed emissione istantanea del file binario.
+  - Test unitari dedicati in `reports.service.spec.ts` (4 test superati).
+- **Consolidamento Documentazione Istituzionale e Contratti di Sicurezza (Checklist Lancio Spec 19)**:
+  - `docs/API.md`: Mappa esaustiva di 120 endpoint REST, specifiche OpenAPI 3.1, standard RFC 9457 Problem Details e convenzioni HTTP.
+  - `docs/SECURITY.md`: Modello di sicurezza conforme a OWASP ASVS Livello 2 (Argon2id, 2FA TOTP RFC 6238, crittografia field-level AES-256-GCM, isolamento multi-tenant a due barriere, scansione antimalware ClamAV e audit log immutabile RFC 4180).
+  - `docs/PRIVACY.md`: Registro delle Attività di Trattamento (Art. 30 GDPR), Valutazione d'Impatto DPIA Minori (Art. 35 GDPR), disciplina del consenso per minori sotto i 14 anni (D.Lgs. 101/2018), portabilità dati (Art. 20) e procedura di Notice and Takedown per gli appunti.
+  - `docs/DECISIONS.md`: Raccolta organica degli Architectural Decision Records da ADR-001 a ADR-005.
+- **Quality Gate**:
+  - Test suite monorepo espansa a **85 test unitari**, 100% verdi (71 `@registro/api`, 14 `@registro/shared`).
+  - `pnpm typecheck`: verificato su tutti i 5 pacchetti con zero errori.
+  - `pnpm lint`: verificato su tutto il monorepo con zero errori.
+  - `pnpm build`: compilazione di produzione verificata per 36 route Next.js e backend NestJS.
+
 ## [0.7.0] - 2026-10-12
 
 ### Aggiunto
