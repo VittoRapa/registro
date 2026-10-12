@@ -19,10 +19,6 @@
     "prisma:push": "prisma db push",
     "prisma:seed": "ts-node prisma/seed.ts"
   },
-  "prisma": {
-    "schema": "prisma/schema.prisma",
-    "seed": "ts-node prisma/seed.ts"
-  },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1149.0",
     "@aws-sdk/s3-request-presigner": "^3.1149.0",

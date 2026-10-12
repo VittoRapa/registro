@@ -42,8 +42,5 @@
     "overrides": {
       "@types/react": "^19.0.8"
     }
-  },
-  "prisma": {
-    "schema": "apps/api/prisma/schema.prisma"
   }
 }
