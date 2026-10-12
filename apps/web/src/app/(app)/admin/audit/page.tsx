@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { History, Loader2 } from 'lucide-react';
+import { History, Loader2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -73,7 +73,7 @@ export default function AuditLogsPage() {
         </p>
       </div>
 
-      <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
         <select
           value={actionFilter}
           onChange={(e) => setActionFilter(e.target.value)}
@@ -86,6 +86,16 @@ export default function AuditLogsPage() {
           <option value="LOGIN_SUCCESS">Login Riuscito</option>
           <option value="LOGIN_FAILED">Login Fallito</option>
         </select>
+
+        <a
+          href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1'}/audit-logs/export-csv`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
+        >
+          <Download className="h-4 w-4" />
+          Esporta Registro CSV (RFC 4180)
+        </a>
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 shadow-sm overflow-hidden">

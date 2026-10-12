@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, ForbiddenException, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuditService, AuditQueryFilters } from './audit.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -23,5 +23,19 @@ export class AuditController {
   ) {
     if (!schoolId) throw new ForbiddenException('Contesto scuola non specificato');
     return this.service.list(schoolId, filters);
+  }
+
+  @Get('export-csv')
+  @ApiOperation({ summary: 'Esportazione registro di audit in formato CSV (RFC 4180)' })
+  async exportCsv(
+    @CurrentUser('schoolId') schoolId: string,
+    @Query() filters: AuditQueryFilters,
+    @Res() res: { setHeader: (k: string, v: string) => void; send: (b: string) => void },
+  ) {
+    if (!schoolId) throw new ForbiddenException('Contesto scuola non specificato');
+    const csv = await this.service.exportCsv(schoolId, filters);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="audit-logs.csv"');
+    res.send(csv);
   }
 }

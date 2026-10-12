@@ -9,6 +9,7 @@ import {
   Loader2,
   CheckCircle2,
   Laptop,
+  FileDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -113,6 +114,28 @@ export default function SecurityProfilePage() {
       window.location.href = '/login';
     },
   });
+
+  // GDPR Data Export mutation
+  const [isExporting, setIsExporting] = useState(false);
+  const handleExportData = async () => {
+    try {
+      setIsExporting(true);
+      const data = await apiClient<unknown>('/users/me/export');
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `registro_dati_personali_${user?.username || 'utente'}_${Date.now()}.json`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('Errore durante il download dell\'archivio dati personali.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -337,6 +360,42 @@ export default function SecurityProfilePage() {
             <p className="text-xs text-slate-500 text-center py-4">Nessuna altra sessione attiva.</p>
           )}
         </CardContent>
+      </Card>
+
+      {/* GDPR Data Portability Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileDown className="h-5 w-5 text-blue-600" />
+                Portabilità Dati Personali (GDPR Art. 20)
+              </CardTitle>
+              <CardDescription>
+                Scarica una copia strutturata in formato JSON interoperabile contenente tutti i tuoi dati personali, voti, presenze, compiti, appunti e messaggi archiviati nel sistema.
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportData}
+              disabled={isExporting}
+              className="gap-2 shrink-0"
+            >
+              {isExporting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Generazione archivio...
+                </>
+              ) : (
+                <>
+                  <FileDown className="h-4 w-4 text-blue-600" />
+                  Scarica Archivio Completo (JSON)
+                </>
+              )}
+            </Button>
+          </div>
+        </CardHeader>
       </Card>
     </div>
   );

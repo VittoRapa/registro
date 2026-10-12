@@ -617,4 +617,95 @@ export class UsersService {
 
     return user;
   }
+
+  /**
+   * GDPR Article 20: Right to Data Portability
+   * Exports full dossier of user data as structured JSON
+   */
+  async exportPersonalData(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        school: { select: { id: true, name: true, code: true } },
+        studentProfile: {
+          include: {
+            enrollments: {
+              include: { class: { select: { name: true, grade: true, section: true } } },
+            },
+            grades: {
+              include: {
+                teachingAssignment: {
+                  include: { subject: { select: { name: true } } },
+                },
+              },
+            },
+            attendanceRecords: true,
+          },
+        },
+        teacherProfile: {
+          include: {
+            teachingAssignments: {
+              include: {
+                class: { select: { name: true } },
+                subject: { select: { name: true } },
+              },
+            },
+          },
+        },
+        parentLinksAsParent: {
+          include: {
+            studentProfile: {
+              include: {
+                user: { select: { firstName: true, lastName: true } },
+              },
+            },
+          },
+        },
+        sharedNotes: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            contentType: true,
+            createdAt: true,
+          },
+        },
+        sentMessages: {
+          select: {
+            id: true,
+            conversationId: true,
+            body: true,
+            sentAt: true,
+          },
+        },
+        notifications: {
+          select: {
+            id: true,
+            type: true,
+            title: true,
+            createdAt: true,
+            readAt: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Utente non trovato');
+    }
+
+    // Exclude security secrets
+    const {
+      passwordHash: _passwordHash,
+      twoFactorSecret: _twoFactorSecret,
+      fiscalCode: _fiscalCode,
+      ...safeUser
+    } = user;
+
+    return {
+      exportTimestamp: new Date().toISOString(),
+      regulation: 'Regolamento Generale sulla Protezione dei Dati (UE 2016/679 - GDPR Art. 20)',
+      dataSubject: safeUser,
+    };
+  }
 }

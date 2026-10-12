@@ -18,10 +18,10 @@ export const loginSchema = z
     totp: z.string().length(6, 'Il codice 2FA deve contenere 6 cifre').optional(),
     totpCode: z.string().length(6, 'Il codice 2FA deve contenere 6 cifre').optional(),
   })
-  .transform((data) => ({
+  .transform((data): { identifier: string; password: string; totp?: string } => ({
     identifier: (data.identifier || data.username || '').trim(),
     password: data.password,
-    totp: data.totp || data.totpCode,
+    ...(data.totp || data.totpCode ? { totp: data.totp || data.totpCode } : {}),
   }))
   .refine((data) => data.identifier.length > 0, {
     message: 'Username o email obbligatorio',

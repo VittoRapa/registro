@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Registro Elettronico",
+    "slug": "registro-elettronico",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "registro",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1e3a8a"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "it.scuola.registro"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1e3a8a"
+      },
+      "package": "it.scuola.registro"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ]
+  }
+}

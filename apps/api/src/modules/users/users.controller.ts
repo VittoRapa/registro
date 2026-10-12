@@ -58,6 +58,13 @@ export class UsersController {
     return this.usersService.getMyProfile(userId);
   }
 
+  @Get('me/export')
+  @Roles(Role.SUPER_ADMIN, Role.SCHOOL_ADMIN, Role.TEACHER, Role.STUDENT, Role.PARENT)
+  @ApiOperation({ summary: 'Esportazione completa dei dati personali (Diritto alla portabilità art. 20 GDPR)' })
+  async exportMyData(@CurrentUser('id') userId: string) {
+    return this.usersService.exportPersonalData(userId);
+  }
+
   @Get(':id')
   @Roles(Role.SCHOOL_ADMIN, Role.SUPER_ADMIN, Role.TEACHER)
   @ApiOperation({ summary: 'Dettagli anagrafica utente' })

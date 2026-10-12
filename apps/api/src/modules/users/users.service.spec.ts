@@ -11,6 +11,7 @@ describe('UsersService Tenant Isolation', () => {
     user: {
       findFirst: ReturnType<typeof vi.fn>;
       findMany: ReturnType<typeof vi.fn>;
+      findUnique: ReturnType<typeof vi.fn>;
       count: ReturnType<typeof vi.fn>;
       update: ReturnType<typeof vi.fn>;
     };
@@ -25,6 +26,7 @@ describe('UsersService Tenant Isolation', () => {
       user: {
         findFirst: vi.fn(),
         findMany: vi.fn(),
+        findUnique: vi.fn(),
         count: vi.fn(),
         update: vi.fn(),
       },
@@ -85,6 +87,47 @@ describe('UsersService Tenant Isolation', () => {
           role: Role.STUDENT,
         }),
       }),
+    );
+  });
+
+  it('exportPersonalData: strips sensitive security fields and formats GDPR dossier', async () => {
+    const mockUser = {
+      id: 'user-123',
+      schoolId: 'school-A',
+      username: 'mario.rossi',
+      email: 'mario@scuola.it',
+      firstName: 'Mario',
+      lastName: 'Rossi',
+      passwordHash: 'secret-hash-argon2id',
+      twoFactorSecret: 'totp-secret-key',
+      fiscalCode: 'encrypted-cf-val',
+      school: { id: 'school-A', name: 'Liceo Da Vinci', code: 'RMIS001' },
+      studentProfile: null,
+      teacherProfile: null,
+      parentLinksAsParent: [],
+      sharedNotes: [],
+      sentMessages: [],
+      notifications: [],
+    };
+
+    prismaMock.user.findUnique.mockResolvedValueOnce(mockUser);
+
+    const dossier = await service.exportPersonalData('user-123');
+
+    expect(dossier).toBeDefined();
+    expect(dossier.regulation).toContain('GDPR Art. 20');
+    expect(dossier.dataSubject.id).toBe('user-123');
+    expect(dossier.dataSubject.username).toBe('mario.rossi');
+    expect((dossier.dataSubject as any).passwordHash).toBeUndefined();
+    expect((dossier.dataSubject as any).twoFactorSecret).toBeUndefined();
+    expect((dossier.dataSubject as any).fiscalCode).toBeUndefined();
+  });
+
+  it('exportPersonalData: throws NotFoundException if user not found', async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce(null);
+
+    await expect(service.exportPersonalData('unknown-user')).rejects.toThrow(
+      NotFoundException,
     );
   });
 });

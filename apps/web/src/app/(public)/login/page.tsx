@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { BookOpen, KeyRound, ShieldAlert, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -228,8 +229,21 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <div className="border-t border-slate-100 pt-6 text-center text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+        <div className="border-t border-slate-100 pt-6 text-center text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400 space-y-2">
           <p>Accesso protetto con cifratura e tracciamento delle sessioni istituzionali.</p>
+          <div className="flex justify-center items-center gap-4 text-slate-400 dark:text-slate-500">
+            <Link href="/privacy" className="hover:text-blue-600 hover:underline">
+              Privacy (GDPR)
+            </Link>
+            <span>•</span>
+            <Link href="/termini" className="hover:text-blue-600 hover:underline">
+              Termini
+            </Link>
+            <span>•</span>
+            <Link href="/accessibilita" className="hover:text-blue-600 hover:underline">
+              Accessibilità AGID
+            </Link>
+          </div>
         </div>
       </div>
     </div>

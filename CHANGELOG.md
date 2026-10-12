@@ -5,6 +5,38 @@ Tutte le modifiche rilevanti a questo progetto saranno documentate in questo fil
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/)
 e questo progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.6.0] - 2026-10-12
+
+### Aggiunto
+- **Diritto alla Portabilità dei Dati Personali (GDPR Art. 20)**:
+  - Endpoint `GET /api/v1/users/me/export` su NestJS che estrae l'intero dossier digitale dell'utente (dati anagrafici, istituto, iscrizioni, voti con pesi e materie, presenze, cattedre, link genitore-figlio, appunti pubblicati, messaggi scambiati, notifiche) mascherando rigorosamente chiavi di sicurezza, `passwordHash`, `twoFactorSecret` e codice fiscale grezzo.
+  - Sezione interattiva in `apps/web/src/app/(app)/profilo/sicurezza/page.tsx` con pulsante per il download istantaneo dell'archivio JSON strutturato ed interoperabile.
+- **Export Audit Log RFC 4180 CSV (`/audit-logs`)**:
+  - Endpoint `GET /api/v1/audit-logs/export-csv` conforme alle specifiche RFC 4180 con quoting protetto dei caratteri speciali, escape di doppi apici e terminatori CRLF standard.
+  - Pulsante "Esporta Registro CSV (RFC 4180)" integrato nel cruscotto amministrativo `apps/web/src/app/(app)/admin/audit/page.tsx`.
+- **Pagine Legali, Trasparenza e Conformità AGID (`apps/web`)**:
+  - `/privacy`: Informativa sul trattamento dei dati personali redatta ai sensi degli artt. 13 e 14 del GDPR, disciplina di tutela dei dati dei minori (art. 8 GDPR e D.Lgs. 101/2018), indicazione DPO e misure di sicurezza applicate (AES-256-GCM, TLS 1.3, Argon2id, TOTP 2FA, isolamento multi-tenant).
+  - `/termini`: Termini e condizioni d'uso della piattaforma, obblighi di custodia delle credenziali, valore giuridico di atto pubblico del registro elettronico e regolamento di condotta e moderazione per gli appunti condivisi.
+  - `/accessibilita`: Dichiarazione di Accessibilità AGID (WCAG 2.1 Livello AA, Legge 4/2004 e Direttiva UE 2016/2102) con dettaglio delle misure tecniche (contrasto 4.5:1, navigazione tastiera completa, attributi ARIA, formule KaTeX accessibili con fallback semantico MathML) e meccanismo di feedback istituzionale.
+  - Footer arricchito nella schermata di login `/login` con collegamenti rapidi a tutte le informative di trasparenza.
+- **Scaffolding e Architettura Applicazione Mobile (`apps/mobile` - Fase 6)**:
+  - Struttura basata su Expo SDK 52, Expo Router v4 e TypeScript strict.
+  - Client API dedicato `mobileApiClient` con fallback automatico localhost/emulatore Android (`10.0.2.2`) e gestione standard RFC 9457 Problem Details.
+  - Gestione sessioni e token JWT sicura con `expo-secure-store` e store globale Zustand (`useMobileAuthStore`).
+  - Schermata di login nativa `/(auth)/login` con supporto username/matricola, password e autenticazione a due fattori TOTP (RFC 6238).
+  - Navigazione a schede protetta `/(app)/(tabs)`:
+    - Tab `Oggi`: Dashboard principale con saluto personalizzato, data estesa, media generale calcolata, contatore valutazioni e ultime prove sostenute.
+    - Tab `Voti`: Libretto voti completo con riepilogo voti totali/sufficienti/insufficienti, dettagli per materia, tipo prova (Scritto/Orale/Pratico), peso percentuale e note docenti.
+    - Tab `Appunti`: Esplorazione marketplace appunti con barra di ricerca, tag materia, rating bayesiano a stelle e badge di verifica docente.
+    - Tab `Profilo`: Dati account, scuola di appartenenza, informativa portabilità GDPR e pulsante di logout sicuro con conferma.
+- **Test Suite & Quality Gate**:
+  - 73 test unitari totali superati al 100% (14 `@registro/shared`, 59 `@registro/api`).
+  - Isolamento della cache Vitest per prevenire lock di file concorrenti su Windows.
+  - Allineamento delle dipendenze di tipizzazione con pnpm overrides per `@types/react`.
+  - Typecheck su 5 pacchetti completato con successo (zero errori).
+  - ESLint verificato su tutti i progetti con zero warning.
+  - Build di produzione completata per 35 route web e backend NestJS.
+
 ## [0.5.0] - 2026-10-12
 
 ### Aggiunto
