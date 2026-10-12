@@ -272,6 +272,112 @@ async function main() {
     }
   }
   console.log(`✓ Studenti creati e iscritti alle classi: ${studentCount}`);
+
+  // 9. Genitore associato al primo studente
+  const firstStudent = await prisma.studentProfile.findFirst({
+    where: { matricola: '20250001' },
+    include: { user: true },
+  });
+
+  if (firstStudent) {
+    const parentUser = await prisma.user.upsert({
+      where: { username: 'genitore.rossi' },
+      update: {},
+      create: {
+        schoolId: school.id,
+        username: 'genitore.rossi',
+        email: 'genitore.rossi@famiglia.it',
+        firstName: 'Giuseppe',
+        lastName: 'Rossi',
+        role: Role.PARENT,
+        status: UserStatus.ACTIVE,
+        passwordHash: defaultPasswordHash,
+        mustChangePassword: false,
+      },
+    });
+
+    await prisma.parentLink.upsert({
+      where: {
+        parentUserId_studentProfileId: {
+          parentUserId: parentUser.id,
+          studentProfileId: firstStudent.id,
+        },
+      },
+      update: {},
+      create: {
+        parentUserId: parentUser.id,
+        studentProfileId: firstStudent.id,
+      },
+    });
+    console.log(`✓ Genitore collegato a studente 20250001: ${parentUser.username}`);
+  }
+
+  // 10. Docente demo e slot colloqui
+  const teacherBianchi = await prisma.user.findFirst({
+    where: { username: 'docente.bianchi0' },
+  });
+
+  if (teacherBianchi) {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(15, 0, 0, 0);
+
+    const tomorrowEnd = new Date(tomorrow);
+    tomorrowEnd.setHours(16, 0, 0, 0);
+
+    await prisma.teacherAvailabilitySlot.create({
+      data: {
+        teacherId: teacherBianchi.id,
+        startAt: tomorrow,
+        endAt: tomorrowEnd,
+        capacity: 3,
+        mode: 'PRESENZA',
+      },
+    });
+    console.log('✓ Slot colloqui docente creato');
+  }
+
+  // 11. Appunto condiviso demo
+  const authorStudent = await prisma.user.findFirst({
+    where: { username: 'studente.20250001' },
+  });
+  const mathSubject = subjects[0];
+  const class1A = classes[0];
+
+  if (authorStudent && mathSubject && class1A) {
+    await prisma.sharedNote.create({
+      data: {
+        schoolId: school.id,
+        authorId: authorStudent.id,
+        subjectId: mathSubject.id,
+        classId: class1A.id,
+        gradeLevel: 1,
+        title: 'Studio dei Limiti Notevoli e Derivate',
+        description: 'Dispensa riassuntiva completa con formule dimostrate in KaTeX e grafici',
+        type: 'MARKDOWN',
+        visibility: 'SCHOOL',
+        status: 'PUBLISHED',
+        markdownContent: `# Studio dei Limiti Notevoli e Derivate
+
+Ecco il riassunto completo delle formule fondamentali per la verifica:
+
+## 1. Limite notevole fondamentale
+$$\\lim_{x \\to 0} \\frac{\\sin(x)}{x} = 1$$
+
+E la sua conseguenza per il coseno:
+$$\\lim_{x \\to 0} \\frac{1 - \\cos(x)}{x^2} = \\frac{1}{2}$$
+
+## 2. Definizione formale di Derivata
+Data una funzione $f(x)$ definita in un intervallo $(a, b)$, la derivata prima in un punto $x_0$ è data dal limite del rapporto incrementale:
+$$f'(x_0) = \\lim_{h \\to 0} \\frac{f(x_0 + h) - f(x_0)}{h}$$
+
+Buono studio a tutta la classe!
+`,
+      },
+    });
+    console.log('✓ Appunto condiviso demo creato');
+  }
+
   console.log('✅ Seeding completato con successo!');
 }
 
