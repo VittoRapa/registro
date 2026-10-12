@@ -58,10 +58,21 @@ async function bootstrap(): Promise<void> {
 
   app.use(cookieParser());
 
-  // CORS configuration
+  // CORS configuration: supporta Netlify, localhost e domini personalizzati
   const webUrl = process.env.WEB_URL || 'http://localhost:3000';
   app.enableCors({
-    origin: [webUrl],
+    origin: (requestOrigin, callback) => {
+      if (!requestOrigin) return callback(null, true);
+      if (
+        requestOrigin === 'http://localhost:3000' ||
+        requestOrigin === webUrl ||
+        requestOrigin.endsWith('.netlify.app') ||
+        process.env.NODE_ENV !== 'production'
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-school-id'],
