@@ -5,6 +5,33 @@ Tutte le modifiche rilevanti a questo progetto saranno documentate in questo fil
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.1.0/)
 e questo progetto aderisce a [Semantic Versioning](https://semver.org/lang/it/).
 
+## [0.9.0] - 2026-10-12
+
+### Aggiunto
+- **DevOps, Ambienti e Configurazioni Deploy (Spec 15)**:
+  - **Netlify Frontend Deployment**:
+    - Creati `netlify.toml` nella root e `apps/web/netlify.toml` con supporto nativo `@netlify/plugin-nextjs`, caching asset e header di sicurezza (HSTS, X-Content-Type-Options, X-Frame-Options).
+  - **Infrastruttura di Produzione Multi-Container (`docker-compose.prod.yml`)**:
+    - Stack completo con reverse proxy Caddy (TLS automatica), API NestJS, Web Next.js, PostgreSQL 16 isolato su rete interna privata, Redis 7 con persistenza AOF, MinIO S3, Gotenberg 8 e ClamAV.
+  - **1-Click Cloud Deployment Blueprints (GDPR Frankfurt/EU)**:
+    - `render.yaml`: Blueprint dichiarativo per deploy su Render (PostgreSQL gratuito gestito + NestJS API con health check `/api/v1/health` e variabili d'ambiente autogenerate).
+    - `railway.json`: Configurazione per deployment cloud su Railway.
+  - **Manuale Operativo di Deploy (`docs/DEPLOYMENT.md`)**:
+    - Guida passo-passo per pubblicazione su Netlify, Render/Railway, VPS Linux Hetzner e Cloudflare Tunnel.
+  - **Avvio Sincronizzato con Script Unificato (`scripts/start-all.ps1`)**:
+    - Script PowerShell automatizzato per pulizia processi orfani, bootstrap PostgreSQL, push schema, seed profili, avvio API/Web e verifica endpoint di salute.
+- **Profili Demo e Credenziali di Test Rapide ("crea anche dei profili se serve")**:
+  - **Selettore Rapido al Login (`apps/web/src/app/(public)/login/page.tsx`)**:
+    - Pulsanti interattivi per la compilazione istantanea con 1 click dei 5 ruoli istituzionali (Studente, Docente, Genitore, Admin Scuola, Super Admin).
+  - **Arricchimento Database di Seed (`apps/api/prisma/seed.ts`)**:
+    - Nuovo profilo `vicepreside.davinci` (School Admin con funzioni vicarie).
+    - Nuovo profilo `genitore.bianchi` (Genitore di Luca Bianchi).
+    - Nuovo profilo `studente.20250002` (Luca Bianchi) con voti insufficienti in matematica (4½) per testare notifiche debito formativo.
+    - 8 voti realistici con medie per `studente.20250001` (Mario Rossi) per generazione pagella ufficiale.
+    - Lezione di Matematica firmata oggi con registro presenze/assenze e ritardi.
+    - Compito per casa registrato in agenda con scadenza a due giorni.
+    - Circolare d'Istituto n. 42 pubblicata in bacheca.
+
 ## [0.8.0] - 2026-10-12
 
 ### Aggiunto

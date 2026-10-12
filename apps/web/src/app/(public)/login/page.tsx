@@ -229,7 +229,75 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <div className="border-t border-slate-100 pt-6 text-center text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400 space-y-2">
+        <div className="border-t border-slate-100 pt-5 dark:border-slate-800">
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2.5 text-center">
+            Profili Demo di Test (Click per compilare rapido):
+          </p>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <button
+              type="button"
+              onClick={() => {
+                setUsername('studente.20250001');
+                setPassword('Password123!#');
+                setErrorMsg(null);
+              }}
+              className="flex flex-col items-start rounded-lg border border-emerald-200 bg-emerald-50/70 p-2 text-left transition hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/70"
+            >
+              <span className="font-semibold text-emerald-800 dark:text-emerald-300">🎓 Studente (1A)</span>
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400">Voti, Pagella, Compiti</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setUsername('docente.bianchi0');
+                setPassword('Password123!#');
+                setErrorMsg(null);
+              }}
+              className="flex flex-col items-start rounded-lg border border-blue-200 bg-blue-50/70 p-2 text-left transition hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/40 dark:hover:bg-blue-950/70"
+            >
+              <span className="font-semibold text-blue-800 dark:text-blue-300">👨‍🏫 Docente (Matematica)</span>
+              <span className="text-[10px] text-blue-600 dark:text-blue-400">Appello, Voti, Registro</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setUsername('genitore.rossi');
+                setPassword('Password123!#');
+                setErrorMsg(null);
+              }}
+              className="flex flex-col items-start rounded-lg border border-purple-200 bg-purple-50/70 p-2 text-left transition hover:bg-purple-100 dark:border-purple-900 dark:bg-purple-950/40 dark:hover:bg-purple-950/70"
+            >
+              <span className="font-semibold text-purple-800 dark:text-purple-300">👨‍👩‍👦 Genitore</span>
+              <span className="text-[10px] text-purple-600 dark:text-purple-400">Giustifiche, Voti figlio</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setUsername('admin.davinci');
+                setPassword('Password123!#');
+                setErrorMsg(null);
+              }}
+              className="flex flex-col items-start rounded-lg border border-amber-200 bg-amber-50/70 p-2 text-left transition hover:bg-amber-100 dark:border-amber-900 dark:bg-amber-950/40 dark:hover:bg-amber-950/70"
+            >
+              <span className="font-semibold text-amber-800 dark:text-amber-300">🏫 Admin Scuola</span>
+              <span className="text-[10px] text-amber-600 dark:text-amber-400">Classi, Utenti, Audit</span>
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setUsername('superadmin');
+              setPassword('SuperAdmin2026!#');
+              setErrorMsg(null);
+            }}
+            className="mt-2 w-full flex items-center justify-between rounded-lg border border-red-200 bg-red-50/60 p-2 text-left transition hover:bg-red-100 dark:border-red-900 dark:bg-red-950/30 dark:hover:bg-red-950/60 text-xs"
+          >
+            <span className="font-semibold text-red-800 dark:text-red-300">🛡️ Super Admin</span>
+            <span className="text-[10px] text-red-600 dark:text-red-400">Piattaforma Multi-Tenant</span>
+          </button>
+        </div>
+
+        <div className="border-t border-slate-100 pt-5 text-center text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400 space-y-2">
           <p>Accesso protetto con cifratura e tracciamento delle sessioni istituzionali.</p>
           <div className="flex justify-center items-center gap-4 text-slate-400 dark:text-slate-500">
             <Link href="/privacy" className="hover:text-blue-600 hover:underline">

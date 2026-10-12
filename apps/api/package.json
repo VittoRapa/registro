@@ -16,6 +16,7 @@
     "clean": "rimraf dist",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:push": "prisma db push",
     "prisma:seed": "ts-node prisma/seed.ts"
   },
   "prisma": {

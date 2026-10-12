@@ -1,4 +1,17 @@
-import { PrismaClient, Role, UserStatus, SchoolStatus, EnrollmentStatus, NoteVisibility, NoteStatus, MeetingMode } from '@prisma/client';
+import {
+  PrismaClient,
+  Role,
+  UserStatus,
+  SchoolStatus,
+  EnrollmentStatus,
+  NoteVisibility,
+  NoteStatus,
+  MeetingMode,
+  AttendanceStatus,
+  GradeType,
+  GradeScaleType,
+  LessonType,
+} from '@prisma/client';
 import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
@@ -332,6 +345,253 @@ async function main() {
       },
     });
     console.log(`✓ Genitore collegato a studente 20250001: ${parentUser.username}`);
+  }
+
+  // 9b. Secondo Genitore e Secondo Studente (per debito formativo e test avanzati)
+  const secondStudent = await prisma.studentProfile.findFirst({
+    where: { matricola: '20250002' },
+    include: { user: true },
+  });
+
+  if (secondStudent) {
+    let parentBianchi = await prisma.user.findFirst({
+      where: { schoolId: school.id, username: 'genitore.bianchi' },
+    });
+
+    if (!parentBianchi) {
+      parentBianchi = await prisma.user.create({
+        data: {
+          schoolId: school.id,
+          username: 'genitore.bianchi',
+          email: 'genitore.bianchi@famiglia.it',
+          firstName: 'Carla',
+          lastName: 'Bianchi',
+          role: Role.PARENT,
+          status: UserStatus.ACTIVE,
+          passwordHash: defaultPasswordHash,
+          mustChangePassword: false,
+        },
+      });
+    }
+
+    await prisma.parentLink.upsert({
+      where: {
+        parentUserId_studentProfileId: {
+          parentUserId: parentBianchi.id,
+          studentProfileId: secondStudent.id,
+        },
+      },
+      update: {},
+      create: {
+        parentUserId: parentBianchi.id,
+        studentProfileId: secondStudent.id,
+      },
+    });
+    console.log(`✓ Secondo Genitore collegato a studente 20250002: ${parentBianchi.username}`);
+  }
+
+  // 9c. Secondo School Admin (Vicepreside)
+  const vicePreside = await prisma.user.upsert({
+    where: {
+      schoolId_username: {
+        schoolId: school.id,
+        username: 'vicepreside.davinci',
+      },
+    },
+    update: {},
+    create: {
+      schoolId: school.id,
+      username: 'vicepreside.davinci',
+      email: 'vicepreside@liceodavinci.edu.it',
+      firstName: 'Laura',
+      lastName: 'Mancini',
+      role: Role.SCHOOL_ADMIN,
+      status: UserStatus.ACTIVE,
+      passwordHash: defaultPasswordHash,
+      mustChangePassword: false,
+    },
+  });
+  console.log(`✓ Vicepreside creato: ${vicePreside.username}`);
+
+  // 9d. Popolamento Voti di Esempio (per Pagella, Medie e Tabellone)
+  const terms = await prisma.term.findMany({
+    where: { academicYearId: academicYear.id },
+    orderBy: { order: 'asc' },
+  });
+  const currentTerm = terms[0] || null;
+
+  const class1AAssignments = await prisma.teachingAssignment.findMany({
+    where: {
+      classId: classes[0]?.id,
+      academicYearId: academicYear.id,
+    },
+    include: { subject: true, teacherProfile: { include: { user: true } } },
+  });
+
+  if (firstStudent && currentTerm && class1AAssignments.length > 0) {
+    const existingGradesCount = await prisma.grade.count({
+      where: { studentProfileId: firstStudent.id },
+    });
+
+    if (existingGradesCount === 0) {
+      for (const assignment of class1AAssignments) {
+        const teacherUserId = assignment.teacherProfile.userId;
+        const subjName = assignment.subject.name;
+
+        // Voti per Mario Rossi (studente modello)
+        const gradesConfig = [
+          { value: 8.5, display: '8½', type: GradeType.SCRITTO, desc: `Verifica scritta ${subjName}` },
+          { value: 9.0, display: '9', type: GradeType.ORALE, desc: `Interrogazione orale ${subjName}` },
+          { value: 8.0, display: '8', type: GradeType.PRATICO, desc: `Laboratorio ${subjName}` },
+        ];
+
+        for (let gIdx = 0; gIdx < gradesConfig.length; gIdx++) {
+          const gc = gradesConfig[gIdx];
+          if (!gc) continue;
+          const gradeDate = new Date();
+          gradeDate.setDate(gradeDate.getDate() - (gIdx * 10 + 2));
+
+          await prisma.grade.create({
+            data: {
+              teachingAssignmentId: assignment.id,
+              studentProfileId: firstStudent.id,
+              termId: currentTerm.id,
+              value: gc.value,
+              scaleType: GradeScaleType.NUMERIC_10,
+              displayValue: gc.display,
+              weight: 1.0,
+              type: gc.type,
+              date: gradeDate,
+              description: gc.desc,
+              visibleToStudent: true,
+              createdByTeacherId: teacherUserId,
+            },
+          });
+        }
+
+        // Voti per Luca Bianchi (con insufficienza/debito in Matematica per testare alert)
+        if (secondStudent) {
+          const isMath = subjName.toLowerCase().includes('matematica');
+          const secondVal = isMath ? 4.5 : 6.5;
+          const secondDisp = isMath ? '4½' : '6½';
+
+          await prisma.grade.create({
+            data: {
+              teachingAssignmentId: assignment.id,
+              studentProfileId: secondStudent.id,
+              termId: currentTerm.id,
+              value: secondVal,
+              scaleType: GradeScaleType.NUMERIC_10,
+              displayValue: secondDisp,
+              weight: 1.0,
+              type: GradeType.SCRITTO,
+              date: new Date(),
+              description: `Verifica scritta ${subjName}`,
+              visibleToStudent: true,
+              createdByTeacherId: teacherUserId,
+            },
+          });
+        }
+      }
+      console.log('✓ Voti realistici popolati per studenti 20250001 e 20250002');
+    }
+  }
+
+  // 9e. Lezione firmata con Registro Presenze/Assenze di oggi
+  const mathAssignment = class1AAssignments.find((a) => a.subject.name === 'Matematica') || class1AAssignments[0];
+  if (mathAssignment && classes[0]) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let lesson = await prisma.lessonRecord.findFirst({
+      where: {
+        classId: classes[0].id,
+        date: today,
+        periodNumber: 1,
+      },
+    });
+
+    if (!lesson) {
+      lesson = await prisma.lessonRecord.create({
+        data: {
+          teachingAssignmentId: mathAssignment.id,
+          classId: classes[0].id,
+          date: today,
+          periodNumber: 1,
+          topic: 'Introduzione ai limiti notevoli e disequazioni razionali fratte',
+          notes: 'Classe attenta e partecipativa. Esercizi svolti alla lavagna.',
+          type: LessonType.LESSON,
+          signedByTeacherId: mathAssignment.teacherProfile.userId,
+          signedAt: new Date(),
+        },
+      });
+
+      if (firstStudent) {
+        await prisma.attendanceRecord.create({
+          data: {
+            lessonRecordId: lesson.id,
+            studentProfileId: firstStudent.id,
+            status: AttendanceStatus.PRESENT,
+            recordedByTeacherId: mathAssignment.teacherProfile.userId,
+          },
+        });
+      }
+
+      if (secondStudent) {
+        await prisma.attendanceRecord.create({
+          data: {
+            lessonRecordId: lesson.id,
+            studentProfileId: secondStudent.id,
+            status: AttendanceStatus.LATE,
+            minutesLate: 10,
+            recordedByTeacherId: mathAssignment.teacherProfile.userId,
+          },
+        });
+      }
+      console.log('✓ Lezione e registro presenze di oggi firmati');
+    }
+
+    // 9f. Compito per casa in Agenda
+    const existingHomework = await prisma.homework.findFirst({
+      where: { classId: classes[0].id, teachingAssignmentId: mathAssignment.id },
+    });
+
+    if (!existingHomework) {
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + 2);
+
+      await prisma.homework.create({
+        data: {
+          teachingAssignmentId: mathAssignment.id,
+          classId: classes[0].id,
+          createdByUserId: mathAssignment.teacherProfile.userId,
+          assignedDate: today,
+          dueDate,
+          title: 'Esercizi di consolidamento sui Limiti Notevoli',
+          description: 'Svolgere esercizi da pag. 142 numeri 15, 18, 22 e 25 del libro di testo.',
+          estimatedMinutes: 45,
+        },
+      });
+      console.log('✓ Compiti per casa aggiunti in agenda');
+    }
+  }
+
+  // 9g. Circolare / Comunicazione d'Istituto
+  const existingAnnouncement = await prisma.announcement.findFirst({
+    where: { authorId: schoolAdmin.id },
+  });
+
+  if (!existingAnnouncement) {
+    await prisma.announcement.create({
+      data: {
+        authorId: schoolAdmin.id,
+        title: 'Circolare n. 42: Calendario Ricevimento Docenti e Colloqui Scuola-Famiglia',
+        body: `Gentili famiglie e docenti,\n\nSi comunica che da lunedì prossimo sono aperte le prenotazioni per i colloqui individuali del primo quadrimestre tramite la piattaforma del Registro Elettronico.\n\nCordiali saluti,\nLa Dirigenza Scolastica.`,
+        audience: { roles: ['TEACHER', 'PARENT', 'STUDENT'] },
+        publishAt: new Date(),
+      },
+    });
+    console.log('✓ Circolare d\'Istituto pubblicata');
   }
 
   // 10. Docente slot disponibilità colloqui
