@@ -34,10 +34,18 @@ export async function apiClient<T>(endpoint: string, options: FetchOptions = {})
     }
   }
 
+  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+
+  const authHeaders: Record<string, string> = {};
+  if (token && !(headers as Record<string, string> | undefined)?.['Authorization']) {
+    authHeaders['Authorization'] = `Bearer ${token}`;
+  }
+
   const response = await fetch(url, {
     ...rest,
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
       ...headers,
     },
     credentials: 'include',

@@ -1,12 +1,8 @@
 import { CanActivate, ExecutionContext, Injectable, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Role, UserJwtPayload } from '@registro/shared';
+import { Role } from '@registro/shared';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import { Request } from 'express';
-
-interface RequestWithUser extends Request {
-  user?: UserJwtPayload;
-}
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -22,10 +18,10 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const { user } = context.switchToHttp().getRequest<RequestWithUser>();
+    const { user } = context.switchToHttp().getRequest<Request>();
 
     if (!user || !user.role) {
-      throw new ForbiddenException('Accesso negato: utente non autorizzato');
+      throw new ForbiddenException('Accesso negato: utente non autenticato o ruolo mancante');
     }
 
     const hasRole = requiredRoles.includes(user.role as Role);

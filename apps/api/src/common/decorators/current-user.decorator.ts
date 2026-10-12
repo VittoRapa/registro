@@ -1,14 +1,10 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { UserJwtPayload } from '@registro/shared';
 import { Request } from 'express';
-
-interface RequestWithUser extends Request {
-  user?: UserJwtPayload;
-}
+import { AuthenticatedUser } from '../tenant/tenant.middleware';
 
 export const CurrentUser = createParamDecorator(
-  (data: keyof UserJwtPayload | undefined, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest<RequestWithUser>();
+  (data: keyof AuthenticatedUser | undefined, ctx: ExecutionContext) => {
+    const request = ctx.switchToHttp().getRequest<Request>();
     const user = request.user;
 
     if (!user) {

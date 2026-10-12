@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Role } from './enums/roles';
-import { Permissions, ROLE_PERMISSIONS, hasPermission } from './permissions';
+import { Permissions, hasPermission } from './permissions';
 
 describe('Permissions Matrix', () => {
   it('SUPER_ADMIN should have all permissions', () => {
