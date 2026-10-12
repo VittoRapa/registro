@@ -5,6 +5,7 @@
   "description": "Next.js 15 frontend application for Registro Elettronico",
   "scripts": {
     "dev": "next dev --port 3000",
+    "prebuild": "pnpm --filter @registro/shared build",
     "build": "next build",
     "start": "next start --port 3000",
     "lint": "eslint src",

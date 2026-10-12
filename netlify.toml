@@ -3,9 +3,9 @@
 # ==============================================================================
 
 [build]
-  base = "apps/web"
-  publish = ".next"
-  command = "pnpm --filter @registro/web build"
+  base = "."
+  publish = "apps/web/.next"
+  command = "pnpm --filter @registro/shared build && pnpm --filter @registro/web build"
 
 [build.environment]
   NODE_VERSION = "22"
