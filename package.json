@@ -20,6 +20,7 @@
     "prepare": "node -e \"try { if (process.env.NODE_ENV !== 'production' && !process.env.CI) import('husky').then(h => h.default()) } catch {}\""
   },
   "dependencies": {
+    "pdfmake": "^0.3.11",
     "prisma": "^6.3.1"
   },
   "devDependencies": {

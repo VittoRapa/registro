@@ -2,13 +2,20 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
 // Import pdfmake v0.3 printer and URLResolver
+// On Linux/POSIX filesystems, filenames are case-sensitive (Printer.js, URLResolver.js)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const PdfPrinter = require('pdfmake/js/printer').default;
+const PdfPrinter = (require('pdfmake/js/Printer')?.default || require('pdfmake/js/Printer'));
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const URLResolver = require('pdfmake/js/URLResolver').default;
+const URLResolver = (require('pdfmake/js/URLResolver')?.default || require('pdfmake/js/URLResolver'));
 
 const FONTS = {
   Helvetica: {
+    normal: 'Helvetica',
+    bold: 'Helvetica-Bold',
+    italics: 'Helvetica-Oblique',
+    bolditalics: 'Helvetica-BoldOblique',
+  },
+  Roboto: {
     normal: 'Helvetica',
     bold: 'Helvetica-Bold',
     italics: 'Helvetica-Oblique',
