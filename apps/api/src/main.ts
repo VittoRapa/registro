@@ -78,6 +78,22 @@ async function bootstrap(): Promise<void> {
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-school-id'],
   });
 
+  // Supporta chiamate che omettono il prefisso /api/v1 (es. /auth/login -> /api/v1/auth/login)
+  const expressInstance = app.getHttpAdapter().getInstance();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  expressInstance.use((req: any, _res: any, next: any) => {
+    if (
+      req.url &&
+      !req.url.startsWith('/api/') &&
+      !req.url.startsWith('/docs') &&
+      !req.url.startsWith('/health') &&
+      req.url !== '/'
+    ) {
+      req.url = `/api/v1${req.url.startsWith('/') ? req.url : `/${req.url}`}`;
+    }
+    next();
+  });
+
   // Global routing prefix
   app.setGlobalPrefix('api/v1');
 

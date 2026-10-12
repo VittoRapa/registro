@@ -17,7 +17,7 @@ import {
   AlertCircle,
   Loader2,
 } from 'lucide-react';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, getApiBaseUrl } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { StudentNav } from '@/components/navigation/student-nav';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -252,7 +252,7 @@ export default function MeetingsPage() {
 
           <div className="flex items-center gap-2">
             <a
-              href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1'}/calendar/feed.ics`}
+              href={`${getApiBaseUrl()}/calendar/feed.ics`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"

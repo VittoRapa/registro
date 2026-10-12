@@ -10,7 +10,7 @@ import {
   Loader2,
   FileDown,
 } from 'lucide-react';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, getApiBaseUrl } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { StudentNav } from '@/components/navigation/student-nav';
 import { GradeSimulator } from '@/components/grades/grade-simulator';
@@ -126,7 +126,7 @@ export default function StudentGradesPage() {
     setDownloadingReport(true);
     try {
       const token = localStorage.getItem('access_token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+      const apiUrl = getApiBaseUrl();
       const res = await fetch(`${apiUrl}/reports/report-card/${studentProfileId}`, {
         headers: {
           Authorization: `Bearer ${token}`,

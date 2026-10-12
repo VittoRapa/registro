@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, getApiBaseUrl } from '@/lib/api-client';
 
 interface AuditLogItem {
   id: string;
@@ -88,7 +88,7 @@ export default function AuditLogsPage() {
         </select>
 
         <a
-          href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1'}/audit-logs/export-csv`}
+          href={`${getApiBaseUrl()}/audit-logs/export-csv`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
