@@ -4,6 +4,7 @@
   "private": true,
   "description": "NestJS 10 backend API for Registro Elettronico",
   "scripts": {
+    "prebuild": "pnpm --filter @registro/shared build && prisma generate",
     "build": "nest build",
     "dev": "nest start --watch",
     "start": "nest start",
